@@ -15,28 +15,38 @@ const client = new line.Client(config);
 // ユーザーの診断状態を保存（本番環境ではDBを使用）
 const userStates = {};
 
+// ヘルスチェック用エンドポイント
+app.get('/', (req, res) => {
+  res.send('LINE Bot is running!');
+});
+
 // Webhookエンドポイント
 app.post('/webhook', line.middleware(config), (req, res) => {
+  console.log('Webhook received:', JSON.stringify(req.body, null, 2));
+  
   Promise
     .all(req.body.events.map(handleEvent))
     .then((result) => res.json(result))
     .catch((err) => {
-      console.error(err);
+      console.error('Error handling events:', err);
       res.status(500).end();
     });
 });
 
 // イベント処理
 async function handleEvent(event) {
-  if (event.type !== 'message' && event.type !== 'postback') {
-    return Promise.resolve(null);
-  }
-
+  console.log('Event received:', event);
+  
   const userId = event.source.userId;
 
   // 友だち追加時またはブロック解除時
   if (event.type === 'follow') {
+    console.log('Follow event detected');
     return sendWelcomeMessage(event.replyToken);
+  }
+  
+  if (event.type !== 'message' && event.type !== 'postback') {
+    return Promise.resolve(null);
   }
 
   // メッセージイベント
