@@ -9,12 +9,8 @@
   ],
   "routes": [
     {
-      "src": "/webhook",
+      "src": "/(.*)",
       "dest": "/index.js"
     }
-  ],
-  "env": {
-    "CHANNEL_ACCESS_TOKEN": "@line-channel-access-token",
-    "CHANNEL_SECRET": "@line-channel-secret"
-  }
+  ]
 }

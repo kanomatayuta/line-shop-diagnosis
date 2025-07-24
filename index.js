@@ -467,7 +467,13 @@ function sendDiagnosisResult(replyToken, userData) {
   return client.replyMessage(replyToken, message);
 }
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Vercel用のエクスポート
+module.exports = app;
+
+// ローカル開発時のみサーバーを起動
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
