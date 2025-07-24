@@ -2,18 +2,8 @@
   "version": 2,
   "name": "line-shop-diagnosis-bot",
   "functions": {
-    "api/index.js": {
+    "api/*.js": {
       "maxDuration": 10
     }
-  },
-  "rewrites": [
-    {
-      "source": "/webhook",
-      "destination": "/api"
-    },
-    {
-      "source": "/",
-      "destination": "/api"
-    }
-  ]
+  }
 }
