@@ -687,12 +687,27 @@ function sendDiagnosisResult(replyToken, userData) {
             contents: [
               {
                 type: 'text',
-                text: `${minPrice}万円 〜 ${maxPrice}万円`,
+                text: `${minPrice}万円`,
                 weight: 'bold',
-                size: '3xl',
+                size: 'xl',
+                align: 'center',
+                color: '#304992'
+              },
+              {
+                type: 'text',
+                text: '〜',
+                size: 'lg',
                 align: 'center',
                 color: '#304992',
-                margin: 'lg'
+                margin: 'sm'
+              },
+              {
+                type: 'text',
+                text: `${maxPrice}万円`,
+                weight: 'bold',
+                size: 'xl',
+                align: 'center',
+                color: '#304992'
               }
             ],
             backgroundColor: '#E3F2FD',
