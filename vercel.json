@@ -1,16 +1,19 @@
 {
   "version": 2,
   "name": "line-shop-diagnosis-bot",
-  "builds": [
-    {
-      "src": "index.js",
-      "use": "@vercel/node"
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 10
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/index.js"
+      "source": "/webhook",
+      "destination": "/api"
+    },
+    {
+      "source": "/",
+      "destination": "/api"
     }
   ]
 }
