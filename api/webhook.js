@@ -134,32 +134,79 @@ function sendWelcomeMessage(replyToken) {
     altText: '店舗売却LINE診断へようこそ',
     contents: {
       type: 'bubble',
+      hero: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '🏪',
+            size: '4xl',
+            align: 'center',
+            margin: 'lg'
+          },
+          {
+            type: 'text',
+            text: '店舗売却LINE診断',
+            weight: 'bold',
+            size: 'xl',
+            align: 'center',
+            color: '#304992',
+            margin: 'md'
+          }
+        ],
+        backgroundColor: '#F8F9FA',
+        paddingAll: '20px'
+      },
       body: {
         type: 'box',
         layout: 'vertical',
         contents: [
           {
             type: 'text',
-            text: '店舗売却LINE診断',
-            weight: 'bold',
-            size: 'xl',
+            text: 'Goodbuyが運営する「店舗売却LINE診断」にご登録いただきありがとうございます。',
+            size: 'md',
+            wrap: true,
+            color: '#333333',
             margin: 'md'
           },
           {
-            type: 'text',
-            text: 'Goodbuyが運営する「店舗売却LINE診断」にご登録いただきありがとうございます。',
-            size: 'sm',
-            wrap: true,
+            type: 'separator',
             margin: 'lg'
           },
           {
-            type: 'text',
-            text: 'たった1分のアンケートに回答するだけで、店舗売却可能額がいくらになるか診断いたします♪',
-            size: 'sm',
-            wrap: true,
-            margin: 'lg'
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              {
+                type: 'text',
+                text: '✨ たった1分で完了',
+                size: 'sm',
+                color: '#304992',
+                weight: 'bold',
+                margin: 'lg'
+              },
+              {
+                type: 'text',
+                text: '📊 無料で査定額がわかる',
+                size: 'sm',
+                color: '#304992',
+                weight: 'bold',
+                margin: 'sm'
+              },
+              {
+                type: 'text',
+                text: '🎯 専門家による正確な診断',
+                size: 'sm',
+                color: '#304992',
+                weight: 'bold',
+                margin: 'sm'
+              }
+            ]
           }
-        ]
+        ],
+        spacing: 'md',
+        paddingAll: '20px'
       },
       footer: {
         type: 'box',
@@ -168,15 +215,17 @@ function sendWelcomeMessage(replyToken) {
           {
             type: 'button',
             style: 'primary',
-            height: 'sm',
+            height: 'md',
+            color: '#304992',
             action: {
               type: 'postback',
-              label: '無料診断はこちら！',
+              label: '🚀 無料診断スタート',
               data: JSON.stringify({ action: 'start' }),
               displayText: '診断開始'
             }
           }
-        ]
+        ],
+        paddingAll: '20px'
       }
     }
   };
@@ -186,56 +235,101 @@ function sendWelcomeMessage(replyToken) {
 
 function sendAreaQuestion(replyToken) {
   const message = {
-    type: 'text',
-    text: 'まずは、以下の簡単なご質問にお答えください。\n\nお店のエリアはどちらでしょうか？',
-    quickReply: {
-      items: [
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '東京',
-            data: JSON.stringify({ action: 'area', value: 'tokyo' }),
-            displayText: '東京'
+    type: 'flex',
+    altText: 'エリア選択',
+    contents: {
+      type: 'bubble',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '📍 Step 1/4',
+            size: 'sm',
+            color: '#304992',
+            weight: 'bold'
+          },
+          {
+            type: 'text',
+            text: 'お店のエリアはどちらですか？',
+            size: 'lg',
+            weight: 'bold',
+            color: '#333333',
+            margin: 'md'
           }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '埼玉',
-            data: JSON.stringify({ action: 'area', value: 'saitama' }),
-            displayText: '埼玉'
+        ],
+        backgroundColor: '#F8F9FA',
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            height: 'md',
+            color: '#304992',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🗼 東京',
+              data: JSON.stringify({ action: 'area', value: 'tokyo' }),
+              displayText: '東京'
+            }
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'md',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🏞️ 埼玉',
+              data: JSON.stringify({ action: 'area', value: 'saitama' }),
+              displayText: '埼玉'
+            }
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'md',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🌊 千葉',
+              data: JSON.stringify({ action: 'area', value: 'chiba' }),
+              displayText: '千葉'
+            }
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'md',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🗻 神奈川',
+              data: JSON.stringify({ action: 'area', value: 'kanagawa' }),
+              displayText: '神奈川'
+            }
+          },
+          {
+            type: 'button',
+            style: 'link',
+            height: 'md',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '📍 その他',
+              data: JSON.stringify({ action: 'area', value: 'other' }),
+              displayText: 'その他'
+            }
           }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '千葉',
-            data: JSON.stringify({ action: 'area', value: 'chiba' }),
-            displayText: '千葉'
-          }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '神奈川',
-            data: JSON.stringify({ action: 'area', value: 'kanagawa' }),
-            displayText: '神奈川'
-          }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: 'その他',
-            data: JSON.stringify({ action: 'area', value: 'other' }),
-            displayText: 'その他'
-          }
-        }
-      ]
+        ],
+        paddingAll: '20px'
+      }
     }
   };
   
@@ -244,47 +338,89 @@ function sendAreaQuestion(replyToken) {
 
 function sendBusinessTypeQuestion(replyToken) {
   const message = {
-    type: 'text',
-    text: '店舗の業種を教えてください',
-    quickReply: {
-      items: [
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '飲食店',
-            data: JSON.stringify({ action: 'business_type', value: 'restaurant' }),
-            displayText: '飲食店'
+    type: 'flex',
+    altText: '業種選択',
+    contents: {
+      type: 'bubble',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '🏢 Step 2/4',
+            size: 'sm',
+            color: '#304992',
+            weight: 'bold'
+          },
+          {
+            type: 'text',
+            text: '店舗の業種を教えてください',
+            size: 'lg',
+            weight: 'bold',
+            color: '#333333',
+            margin: 'md'
           }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '小売店',
-            data: JSON.stringify({ action: 'business_type', value: 'retail' }),
-            displayText: '小売店'
+        ],
+        backgroundColor: '#F8F9FA',
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            height: 'md',
+            color: '#304992',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🍴 飲食店',
+              data: JSON.stringify({ action: 'business_type', value: 'restaurant' }),
+              displayText: '飲食店'
+            }
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'md',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🛍️ 小売店',
+              data: JSON.stringify({ action: 'business_type', value: 'retail' }),
+              displayText: '小売店'
+            }
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'md',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '💼 サービス業',
+              data: JSON.stringify({ action: 'business_type', value: 'service' }),
+              displayText: 'サービス業'
+            }
+          },
+          {
+            type: 'button',
+            style: 'link',
+            height: 'md',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🏪 その他',
+              data: JSON.stringify({ action: 'business_type', value: 'other' }),
+              displayText: 'その他'
+            }
           }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: 'サービス業',
-            data: JSON.stringify({ action: 'business_type', value: 'service' }),
-            displayText: 'サービス業'
-          }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: 'その他',
-            data: JSON.stringify({ action: 'business_type', value: 'other' }),
-            displayText: 'その他'
-          }
-        }
-      ]
+        ],
+        paddingAll: '20px'
+      }
     }
   };
   
@@ -293,38 +429,77 @@ function sendBusinessTypeQuestion(replyToken) {
 
 function sendSizeQuestion(replyToken) {
   const message = {
-    type: 'text',
-    text: '店舗の広さはどのくらいですか？',
-    quickReply: {
-      items: [
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '〜20坪',
-            data: JSON.stringify({ action: 'size', value: 'small' }),
-            displayText: '〜20坪'
+    type: 'flex',
+    altText: '店舗の広さ選択',
+    contents: {
+      type: 'bubble',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '📏 Step 3/4',
+            size: 'sm',
+            color: '#304992',
+            weight: 'bold'
+          },
+          {
+            type: 'text',
+            text: '店舗の広さはどのくらいですか？',
+            size: 'lg',
+            weight: 'bold',
+            color: '#333333',
+            margin: 'md'
           }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '20〜50坪',
-            data: JSON.stringify({ action: 'size', value: 'medium' }),
-            displayText: '20〜50坪'
+        ],
+        backgroundColor: '#F8F9FA',
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            height: 'md',
+            color: '#304992',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🏠 〜20坪',
+              data: JSON.stringify({ action: 'size', value: 'small' }),
+              displayText: '〜20坪'
+            }
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'md',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🏢 20〜50坪',
+              data: JSON.stringify({ action: 'size', value: 'medium' }),
+              displayText: '20〜50坪'
+            }
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'md',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🏬 50坪以上',
+              data: JSON.stringify({ action: 'size', value: 'large' }),
+              displayText: '50坪以上'
+            }
           }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '50坪以上',
-            data: JSON.stringify({ action: 'size', value: 'large' }),
-            displayText: '50坪以上'
-          }
-        }
-      ]
+        ],
+        paddingAll: '20px'
+      }
     }
   };
   
@@ -333,47 +508,89 @@ function sendSizeQuestion(replyToken) {
 
 function sendYearsQuestion(replyToken) {
   const message = {
-    type: 'text',
-    text: '営業年数を教えてください',
-    quickReply: {
-      items: [
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '1年未満',
-            data: JSON.stringify({ action: 'years', value: 'less1' }),
-            displayText: '1年未満'
+    type: 'flex',
+    altText: '営業年数選択',
+    contents: {
+      type: 'bubble',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '📅 Step 4/4',
+            size: 'sm',
+            color: '#304992',
+            weight: 'bold'
+          },
+          {
+            type: 'text',
+            text: '営業年数を教えてください',
+            size: 'lg',
+            weight: 'bold',
+            color: '#333333',
+            margin: 'md'
           }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '1〜3年',
-            data: JSON.stringify({ action: 'years', value: '1to3' }),
-            displayText: '1〜3年'
+        ],
+        backgroundColor: '#F8F9FA',
+        paddingAll: '20px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            height: 'md',
+            color: '#304992',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🌱 1年未満',
+              data: JSON.stringify({ action: 'years', value: 'less1' }),
+              displayText: '1年未満'
+            }
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'md',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🌳 1〜3年',
+              data: JSON.stringify({ action: 'years', value: '1to3' }),
+              displayText: '1〜3年'
+            }
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'md',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🌲 3〜5年',
+              data: JSON.stringify({ action: 'years', value: '3to5' }),
+              displayText: '3〜5年'
+            }
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'md',
+            margin: 'sm',
+            action: {
+              type: 'postback',
+              label: '🌴 5年以上',
+              data: JSON.stringify({ action: 'years', value: 'over5' }),
+              displayText: '5年以上'
+            }
           }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '3〜5年',
-            data: JSON.stringify({ action: 'years', value: '3to5' }),
-            displayText: '3〜5年'
-          }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '5年以上',
-            data: JSON.stringify({ action: 'years', value: 'over5' }),
-            displayText: '5年以上'
-          }
-        }
-      ]
+        ],
+        paddingAll: '20px'
+      }
     }
   };
   
@@ -427,17 +644,83 @@ function sendDiagnosisResult(replyToken, userData) {
     altText: '診断結果',
     contents: {
       type: 'bubble',
+      hero: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '🎉',
+            size: '4xl',
+            align: 'center',
+            margin: 'md'
+          },
+          {
+            type: 'text',
+            text: '診断完了！',
+            weight: 'bold',
+            size: 'xl',
+            align: 'center',
+            color: '#304992',
+            margin: 'sm'
+          }
+        ],
+        backgroundColor: '#F8F9FA',
+        paddingAll: '20px'
+      },
       body: {
         type: 'box',
         layout: 'vertical',
         contents: [
           {
             type: 'text',
-            text: '診断結果',
+            text: 'あなたの店舗の推定売却額',
+            size: 'lg',
             weight: 'bold',
-            size: 'xl',
-            margin: 'md',
-            align: 'center'
+            align: 'center',
+            color: '#333333',
+            margin: 'md'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              {
+                type: 'text',
+                text: `${minPrice}万円 〜 ${maxPrice}万円`,
+                weight: 'bold',
+                size: '3xl',
+                align: 'center',
+                color: '#304992',
+                margin: 'lg'
+              }
+            ],
+            backgroundColor: '#E3F2FD',
+            paddingAll: '20px',
+            cornerRadius: '10px',
+            margin: 'lg'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              {
+                type: 'text',
+                text: '💡 診断のポイント',
+                size: 'md',
+                weight: 'bold',
+                color: '#304992',
+                margin: 'md'
+              },
+              {
+                type: 'text',
+                text: '• エリアの立地条件\n• 業種による需要度\n• 店舗規模と収益性\n• 営業実績と安定性',
+                size: 'sm',
+                color: '#666666',
+                margin: 'sm',
+                wrap: true
+              }
+            ]
           },
           {
             type: 'separator',
@@ -445,29 +728,15 @@ function sendDiagnosisResult(replyToken, userData) {
           },
           {
             type: 'text',
-            text: 'あなたの店舗の推定売却額は',
-            size: 'md',
-            margin: 'lg',
-            align: 'center'
-          },
-          {
-            type: 'text',
-            text: `${minPrice}万円 〜 ${maxPrice}万円`,
-            weight: 'bold',
-            size: 'xxl',
-            margin: 'lg',
-            align: 'center',
-            color: '#FF6B6B'
-          },
-          {
-            type: 'text',
-            text: '※この金額は簡易診断による目安です。\n実際の売却額は詳細な査定により変動します。',
+            text: '※この金額は簡易診断による目安です。実際の売却額は詳細な査定により変動します。',
             size: 'xs',
             wrap: true,
             margin: 'lg',
-            color: '#666666'
+            color: '#999999',
+            align: 'center'
           }
-        ]
+        ],
+        paddingAll: '20px'
       },
       footer: {
         type: 'box',
@@ -477,24 +746,26 @@ function sendDiagnosisResult(replyToken, userData) {
           {
             type: 'button',
             style: 'primary',
-            height: 'sm',
+            height: 'md',
+            color: '#304992',
             action: {
               type: 'uri',
-              label: '詳細査定を申し込む',
+              label: '📞 詳細査定を申し込む',
               uri: 'https://example.com/contact'
             }
           },
           {
             type: 'button',
             style: 'link',
-            height: 'sm',
+            height: 'md',
             action: {
               type: 'message',
-              label: 'もう一度診断する',
+              label: '🔄 もう一度診断する',
               text: '最初から'
             }
           }
-        ]
+        ],
+        paddingAll: '20px'
       }
     }
   };
