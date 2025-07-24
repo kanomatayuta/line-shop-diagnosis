@@ -14,8 +14,17 @@ const userStates = {};
 module.exports = async (req, res) => {
   // CORSヘッダーを設定
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Line-Signature');
+
+  // GETリクエストへの対応（ブラウザアクセス用）
+  if (req.method === 'GET') {
+    return res.status(200).json({ 
+      status: 'ok',
+      message: 'LINE Webhook endpoint is ready',
+      method: 'Please use POST method for webhook'
+    });
+  }
 
   // OPTIONSリクエストへの対応
   if (req.method === 'OPTIONS') {
