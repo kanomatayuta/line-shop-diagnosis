@@ -98,30 +98,80 @@ async function handleEvent(event) {
     const userId = event.source.userId;
     const data = JSON.parse(event.postback.data);
     
-    switch (data.action) {
-      case 'start':
-        userStates[userId] = { step: 'area' };
-        return sendAreaQuestion(event.replyToken);
-        
-      case 'area':
-        if (!userStates[userId]) userStates[userId] = {};
-        userStates[userId].area = data.value;
-        userStates[userId].step = 'business_type';
-        return sendBusinessTypeQuestion(event.replyToken);
-        
-      case 'business_type':
-        userStates[userId].businessType = data.value;
-        userStates[userId].step = 'size';
-        return sendSizeQuestion(event.replyToken);
-        
-      case 'size':
-        userStates[userId].size = data.value;
-        userStates[userId].step = 'years';
-        return sendYearsQuestion(event.replyToken);
-        
-      case 'years':
-        userStates[userId].years = data.value;
-        return sendDiagnosisResult(event.replyToken, userStates[userId]);
+    // ユーザー状態の初期化
+    if (!userStates[userId]) {
+      userStates[userId] = { step: 'start', processing: false };
+    }
+    
+    // 処理中の場合は無視
+    if (userStates[userId].processing) {
+      console.log('Processing in progress, ignoring duplicate request');
+      return null;
+    }
+    
+    // 処理開始フラグを設定
+    userStates[userId].processing = true;
+    
+    try {
+      switch (data.action) {
+        case 'start':
+          // 既に診断が開始されている場合は無視
+          if (userStates[userId].step !== 'start' && userStates[userId].step !== 'completed') {
+            console.log('Diagnosis already in progress');
+            return null;
+          }
+          userStates[userId] = { step: 'area', processing: true };
+          return sendAreaQuestion(event.replyToken);
+          
+        case 'area':
+          // 既にエリアが選択されている場合は無視
+          if (userStates[userId].step !== 'area') {
+            console.log('Area already selected or wrong step');
+            return null;
+          }
+          userStates[userId].area = data.value;
+          userStates[userId].step = 'business_type';
+          return sendBusinessTypeQuestion(event.replyToken);
+          
+        case 'business_type':
+          // 既に業種が選択されている場合は無視
+          if (userStates[userId].step !== 'business_type') {
+            console.log('Business type already selected or wrong step');
+            return null;
+          }
+          userStates[userId].businessType = data.value;
+          userStates[userId].step = 'size';
+          return sendSizeQuestion(event.replyToken);
+          
+        case 'size':
+          // 既にサイズが選択されている場合は無視
+          if (userStates[userId].step !== 'size') {
+            console.log('Size already selected or wrong step');
+            return null;
+          }
+          userStates[userId].size = data.value;
+          userStates[userId].step = 'years';
+          return sendYearsQuestion(event.replyToken);
+          
+        case 'years':
+          // 既に年数が選択されている場合は無視
+          if (userStates[userId].step !== 'years') {
+            console.log('Years already selected or wrong step');
+            return null;
+          }
+          userStates[userId].years = data.value;
+          userStates[userId].step = 'completed';
+          return sendDiagnosisResult(event.replyToken, userStates[userId]);
+          
+        default:
+          console.log('Unknown action:', data.action);
+          return null;
+      }
+    } finally {
+      // 処理完了後にフラグをリセット
+      if (userStates[userId]) {
+        userStates[userId].processing = false;
+      }
     }
   }
   
