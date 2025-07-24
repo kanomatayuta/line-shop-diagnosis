@@ -12,6 +12,14 @@ const config = {
 
 const client = new line.Client(config);
 
+// デバッグ用：環境変数の確認
+console.log('Environment check:', {
+  hasToken: !!process.env.CHANNEL_ACCESS_TOKEN,
+  hasSecret: !!process.env.CHANNEL_SECRET,
+  tokenLength: process.env.CHANNEL_ACCESS_TOKEN?.length,
+  secretLength: process.env.CHANNEL_SECRET?.length
+});
+
 // ユーザーの診断状態を保存（本番環境ではDBを使用）
 const userStates = {};
 
@@ -20,13 +28,34 @@ app.get('/', (req, res) => {
   res.send('LINE Bot is running!');
 });
 
-// Webhookエンドポイント
-app.post('/webhook', line.middleware(config), (req, res) => {
+// JSONパーサーを追加
+app.use(express.json());
+
+// Webhookエンドポイント（デバッグ用に一時的に署名検証をスキップ）
+app.post('/webhook', (req, res) => {
   console.log('Webhook received:', JSON.stringify(req.body, null, 2));
+  console.log('Headers:', req.headers);
+  
+  // 手動で署名検証（デバッグ用）
+  const channelSecret = process.env.CHANNEL_SECRET;
+  const signature = req.get('X-Line-Signature');
+  
+  if (!signature) {
+    console.error('No signature found');
+  }
+  
+  // イベント処理
+  if (!req.body || !req.body.events) {
+    console.error('No events in body');
+    return res.status(400).send('No events');
+  }
   
   Promise
     .all(req.body.events.map(handleEvent))
-    .then((result) => res.json(result))
+    .then((result) => {
+      console.log('Events processed successfully:', result);
+      res.json(result);
+    })
     .catch((err) => {
       console.error('Error handling events:', err);
       res.status(500).end();
