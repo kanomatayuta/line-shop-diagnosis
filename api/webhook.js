@@ -35,35 +35,39 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  console.log('Webhook received:', {
-    method: req.method,
-    headers: req.headers,
-    body: req.body
-  });
+  console.log('=== Webhook POST Request ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('Body:', JSON.stringify(req.body, null, 2));
 
   try {
+    // LINE署名検証をスキップして、まず200を返すことを優先
+    
     // リクエストボディの検証
     if (!req.body) {
-      console.log('No body in request');
-      return res.status(200).json({ message: 'OK' });
+      console.log('No body in request - returning 200');
+      return res.status(200).json({ status: 'ok', message: 'No body' });
     }
 
     const events = req.body.events;
     
     // イベントがない場合も200を返す（LINE Webhook検証用）
     if (!events || events.length === 0) {
-      console.log('No events in body');
-      return res.status(200).json({ message: 'OK' });
+      console.log('No events in body - returning 200 for verification');
+      return res.status(200).json({ status: 'ok', message: 'Verification successful' });
     }
 
     // イベント処理
+    console.log('Processing events:', events.length);
     await Promise.all(events.map(handleEvent));
     
-    res.status(200).json({ success: true });
+    console.log('All events processed - returning 200');
+    res.status(200).json({ status: 'ok', events: events.length });
   } catch (error) {
     console.error('Error processing webhook:', error);
     // エラーが発生しても200を返す（LINEの仕様）
-    res.status(200).json({ message: 'Error occurred but returning 200' });
+    res.status(200).json({ status: 'ok', message: 'Error occurred but returning 200' });
   }
 };
 
