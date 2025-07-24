@@ -8,6 +8,12 @@ const config = {
 
 const client = new line.Client(config);
 
+// 環境変数チェック
+console.log('Environment check:', {
+  hasToken: !!process.env.CHANNEL_ACCESS_TOKEN,
+  hasSecret: !!process.env.CHANNEL_SECRET
+});
+
 // ユーザーの診断状態を保存
 const userStates = {};
 
