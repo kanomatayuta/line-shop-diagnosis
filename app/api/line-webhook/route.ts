@@ -9,11 +9,14 @@ const LINE_CONFIG = {
   channelSecret: process.env.LINE_CHANNEL_SECRET || ''
 }
 
-console.log('⚡ LINE CONFIG STATUS:', {
+console.log('⚡ DETAILED LINE CONFIG STATUS:', {
   hasToken: !!LINE_CONFIG.channelAccessToken,
   tokenLength: LINE_CONFIG.channelAccessToken.length,
+  tokenPreview: LINE_CONFIG.channelAccessToken.substring(0, 20) + '...',
   hasSecret: !!LINE_CONFIG.channelSecret,
   secretLength: LINE_CONFIG.channelSecret.length,
+  secretPreview: LINE_CONFIG.channelSecret.substring(0, 8) + '...',
+  nodeEnv: process.env.NODE_ENV,
   timestamp: new Date().toISOString()
 })
 
@@ -33,10 +36,10 @@ if (LINE_CONFIG.channelAccessToken && LINE_CONFIG.channelSecret) {
 // 限界を越えた超高速アンケートフロー
 const ULTIMATE_SURVEY = {
   welcome: {
-    title: "🎯 限界突破診断",
-    message: "友だち登録ありがとうございます！🚀\n\n限界を越えた超高速診断をお届けします✨\n\n今すぐ開始しましょう！",
+    title: "🎉 無料診断スタート",
+    message: "友だち登録ありがとうございます！🎊\n\n🎯 あなたの可能性を無料で診断します\n✨ 簡単3分で完了\n📊 詳細な分析結果をお届け\n\n今すぐ開始しましょう！",
     buttons: [
-      { label: "🚀 限界突破開始", action: "start", next: "category" }
+      { label: "🚀 無料診断開始", action: "start", next: "category" }
     ]
   },
   category: {
@@ -172,14 +175,18 @@ async function handleUltimateMessage(event: MessageEvent): Promise<Message> {
   
   console.log(`🔥 ULTIMATE MESSAGE from ${userId}: ${text}`)
 
-  // スタート系のワード
+  // スタート系のワード（無料診断も追加）
   if (!userSessions.has(userId) || 
       text.includes('スタート') || 
       text.includes('開始') ||
       text.includes('はじめ') ||
-      text.includes('診断')) {
+      text.includes('診断') ||
+      text.includes('無料診断') ||
+      text.includes('無料') ||
+      text.includes('START') ||
+      text.includes('start')) {
     
-    console.log(`🚀 ULTIMATE START for ${userId}`)
+    console.log(`🚀 ULTIMATE START for ${userId} with trigger: ${text}`)
     userSessions.set(userId, { currentStep: 'welcome', data: {} })
     return createUltimateFlexMessage(ULTIMATE_SURVEY.welcome)
   }
@@ -193,7 +200,7 @@ async function handleUltimateMessage(event: MessageEvent): Promise<Message> {
   // デフォルト
   return {
     type: 'text',
-    text: '🚀 限界を越えた診断を開始するには\n「スタート」と送信してください！\n\n✨ 究極の分析をお届けします'
+    text: '🚀 限界を越えた診断を開始するには\n「スタート」または「無料診断」と送信してください！\n\n✨ 究極の分析をお届けします\n\n📱 キーワード例:\n・スタート\n・無料診断\n・診断\n・開始'
   }
 }
 
@@ -223,7 +230,7 @@ async function handleUltimatePostback(event: PostbackEvent): Promise<Message> {
       case 'report':
         return {
           type: 'text',
-          text: `🎉 限界突破レポート準備中！\n\n✨ あなたの分析結果：\n📊 データ処理中...\n🚀 成功への道筋を計算中...\n\n💪 限界を越えた可能性を発見しました！\n\n🔄 再診断は「スタート」で！`
+          text: `🎉 無料診断レポート準備中！\n\n✨ あなたの分析結果：\n📊 データ処理中...\n🚀 成功への道筋を計算中...\n\n💪 素晴らしい可能性を発見しました！\n\n🎁 詳細レポートは無料でお届け中\n\n🔄 再診断は「無料診断」で！`
         }
       
       case 'start':
@@ -233,14 +240,14 @@ async function handleUltimatePostback(event: PostbackEvent): Promise<Message> {
       default:
         return {
           type: 'text',
-          text: `✅ 回答記録完了！\n\n📝 ${action}: ${value}\n\n🔥 限界を越えた分析を実行中...\n\n🚀 続行は「スタート」で！`
+          text: `✅ 回答記録完了！\n\n📝 ${action}: ${value}\n\n🔥 限界を越えた分析を実行中...\n\n🚀 続行は「スタート」または「無料診断」で！`
         }
     }
   } catch (error) {
     console.error('❌ ULTIMATE POSTBACK ERROR:', error)
     return {
       type: 'text',
-      text: '⚡ エラーが発生しました\n「スタート」で再開してください！'
+      text: '⚡ エラーが発生しました\n「スタート」または「無料診断」で再開してください！'
     }
   }
 }
@@ -306,14 +313,24 @@ export async function POST(request: NextRequest) {
       if (ultimateMessage && 'replyToken' in event && event.replyToken) {
         try {
           console.log('🚀 SENDING ULTIMATE MESSAGE...')
+          console.log('📤 Message type:', ultimateMessage.type)
+          console.log('🎯 Reply token:', event.replyToken)
+          console.log('👤 User ID:', event.source.userId)
+          
           await lineClient.replyMessage(event.replyToken, ultimateMessage)
+          
           console.log('✅ ULTIMATE MESSAGE SENT SUCCESSFULLY!')
+          console.log('🎊 Message delivered to user:', event.source.userId)
+          
         } catch (error) {
           console.error('❌ ULTIMATE SEND FAILED:', error)
-          console.error('🔍 Client status:', {
+          console.error('🔍 Detailed error info:', {
             hasClient: !!lineClient,
             hasToken: !!LINE_CONFIG.channelAccessToken,
-            tokenStart: LINE_CONFIG.channelAccessToken.substring(0, 10)
+            tokenStart: LINE_CONFIG.channelAccessToken.substring(0, 10),
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            replyToken: event.replyToken,
+            userId: event.source.userId
           })
         }
       }
