@@ -1,18 +1,21 @@
 {
-    "name": "line-shop-diagnosis-bot",
-    "version": "1.0.0",
-    "description": "LINE店舗売却診断ボット",
-    "main": "index.js",
-    "scripts": {
-      "start": "node index.js",
-      "dev": "nodemon index.js"
-    },
-    "dependencies": {
-      "@line/bot-sdk": "^7.5.2",
-      "express": "^4.18.2",
-      "dotenv": "^16.0.3"
-    },
-    "devDependencies": {
-      "nodemon": "^2.0.20"
-    }
+  "name": "line-flow-designer-pro",
+  "version": "2.0.0",
+  "description": "🚀 LINE Flow Designer Pro - iOS Design Kit",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static build ready'",
+    "start": "vercel dev"
+  },
+  "keywords": ["line", "bot", "flow", "designer", "ios", "vercel"],
+  "author": "LINE Flow Team",
+  "license": "MIT",
+  "dependencies": {
+    "@line/bot-sdk": "^8.0.0",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
+}

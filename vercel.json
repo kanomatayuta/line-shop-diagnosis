@@ -1,23 +1,43 @@
 {
   "version": 2,
-  "name": "line-shop-diagnosis-bot",
+  "name": "line-flow-designer-pro",
+  "description": "🚀 LINE Flow Designer Pro - Next Generation Flow Management",
   "functions": {
     "api/*.js": {
       "maxDuration": 10
     }
   },
-  "rewrites": [
+  "headers": [
     {
-      "source": "/admin",
-      "destination": "/api/admin"
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options", 
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/live-engine",
+      "dest": "/api/live-engine.js"
     },
     {
-      "source": "/admin/(.*)",
-      "destination": "/api/admin/$1"
+      "src": "/designer",
+      "dest": "/designer.html"
     },
     {
-      "source": "/admin-ios",
-      "destination": "/api/admin-ios"
+      "src": "/",
+      "dest": "/index.html"
     }
   ]
 }
