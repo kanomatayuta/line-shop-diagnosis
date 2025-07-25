@@ -235,39 +235,68 @@ const iosColors = {
   tertiaryBackground: '#FFFFFF',
 }
 
-// iOS風フレックスメッセージ作成
+// 高度なiOS風フレックスメッセージ作成
 function createUltimateFlexMessage(step: any): Message {
-  console.log(`🎨 Creating iOS-style flex for: ${step.title}`)
+  console.log(`🎨 Creating advanced iOS-style flex for: ${step.title}`)
   
   // 5つ以上のボタンがある場合はカルーセル形式にする
   if (step.buttons && step.buttons.length >= 5) {
     return createCarouselMessage(step)
   }
   
-  // iOS風カードスタイルのボタン作成
-  const createIOSButton = (btn: any, index: number, total: number) => {
-    const isPrimary = index < Math.min(2, total)
+  // 高度なiOS風ボタン作成（新しいスタイル）
+  const createAdvancedIOSButton = (btn: any, index: number, total: number) => {
+    const isPrimary = index === 0
+    const isSecondary = index === 1
+    
     return {
-      type: 'button',
-      action: {
-        type: 'postback',
-        label: btn.label,
-        data: JSON.stringify({
-          action: btn.action,
-          value: btn.value || '',
-          next: btn.next || ''
-        })
-      },
-      style: isPrimary ? 'primary' : 'secondary',
-      color: isPrimary ? iosColors.primary : iosColors.systemGray,
-      height: 'md',
-      gravity: 'center'
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        {
+          type: 'button',
+          action: {
+            type: 'postback',
+            label: btn.label,
+            data: JSON.stringify({
+              action: btn.action,
+              value: btn.value || '',
+              next: btn.next || ''
+            })
+          },
+          style: isPrimary ? 'primary' : 'secondary',
+          color: isPrimary ? iosColors.primary : (isSecondary ? iosColors.systemBlue : iosColors.systemGray3),
+          height: 'md',
+          gravity: 'center'
+        }
+      ],
+      margin: index === 0 ? 'none' : 'sm',
+      cornerRadius: '12px',
+      backgroundColor: isPrimary ? iosColors.primary : 
+                      isSecondary ? iosColors.systemBlue + '10' : 
+                      iosColors.systemGray6,
+      paddingAll: '2px'
     }
   }
 
   const buttons = step.buttons?.map((btn: any, index: number) => 
-    createIOSButton(btn, index, step.buttons.length)
+    createAdvancedIOSButton(btn, index, step.buttons.length)
   ) || []
+
+  // アイコンの選択ロジック
+  const getStepIcon = (title: string) => {
+    if (title.includes('診断結果')) return '📊'
+    if (title.includes('エリア')) return '📍'
+    if (title.includes('経営')) return '💼'
+    if (title.includes('営業利益')) return '💰'
+    if (title.includes('階数')) return '🏢'
+    if (title.includes('商業施設')) return '🏪'
+    if (title.includes('固定資産')) return '📦'
+    if (title.includes('従業員')) return '👥'
+    if (title.includes('相談')) return '📞'
+    if (title.includes('お断り')) return '💭'
+    return '🌟'
+  }
 
   return {
     type: 'flex',
@@ -275,63 +304,70 @@ function createUltimateFlexMessage(step: any): Message {
     contents: {
       type: 'bubble',
       size: 'giga',
-      hero: {
+      header: {
         type: 'box',
         layout: 'vertical',
         contents: [
           {
-            type: 'text',
-            text: step.title,
-            weight: 'bold',
-            size: 'xl',
-            color: '#FFFFFF',
-            wrap: true,
-            align: 'center',
-            margin: 'none'
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              {
+                type: 'text',
+                text: getStepIcon(step.title),
+                size: 'xl',
+                weight: 'bold',
+                color: '#FFFFFF',
+                flex: 0,
+                margin: 'none'
+              },
+              {
+                type: 'text',
+                text: step.title,
+                weight: 'bold',
+                size: 'lg',
+                color: '#FFFFFF',
+                wrap: true,
+                flex: 1,
+                margin: 'md',
+                gravity: 'center'
+              }
+            ],
+            spacing: 'sm'
           }
         ],
         backgroundColor: iosColors.primary,
-        paddingAll: '28px',
-        cornerRadius: '16px',
-        spacing: 'none'
+        paddingAll: '20px',
+        cornerRadius: '20px'
       },
       body: {
         type: 'box',
         layout: 'vertical',
         contents: [
           {
-            type: 'spacer',
-            size: 'md'
-          },
-          {
             type: 'text',
             text: step.message,
             wrap: true,
             size: 'md',
             color: iosColors.label,
-            lineSpacing: '8px',
-            align: 'left',
+            lineSpacing: '6px',
             margin: 'none'
-          },
-          {
-            type: 'spacer',
-            size: 'lg'
           }
         ],
-        paddingAll: '24px',
-        spacing: 'none',
-        backgroundColor: iosColors.background
+        paddingAll: '20px',
+        backgroundColor: iosColors.background,
+        spacing: 'none'
       },
       footer: buttons.length > 0 ? {
         type: 'box',
         layout: 'vertical',
         contents: buttons,
         spacing: 'sm',
-        paddingAll: '24px',
+        paddingAll: '20px',
         backgroundColor: iosColors.background
       } : undefined,
       styles: {
-        hero: {
+        header: {
           separator: false
         },
         body: {
@@ -345,26 +381,52 @@ function createUltimateFlexMessage(step: any): Message {
   }
 }
 
-// カルーセル形式のメッセージ作成（5つ以上のボタン用）
+// 高度なカルーセル形式のメッセージ作成（5つ以上のボタン用）
 function createCarouselMessage(step: any): Message {
   const buttonsPerCard = 2
   const cards = []
   
+  // アイコンの選択ロジック
+  const getStepIcon = (title: string) => {
+    if (title.includes('診断結果')) return '📊'
+    if (title.includes('エリア')) return '📍'
+    if (title.includes('経営')) return '💼'
+    if (title.includes('営業利益')) return '💰'
+    if (title.includes('階数')) return '🏢'
+    if (title.includes('商業施設')) return '🏪'
+    if (title.includes('固定資産')) return '📦'
+    if (title.includes('従業員')) return '👥'
+    if (title.includes('相談')) return '📞'
+    if (title.includes('お断り')) return '💭'
+    return '🌟'
+  }
+  
   for (let i = 0; i < step.buttons.length; i += buttonsPerCard) {
-    const cardButtons = step.buttons.slice(i, i + buttonsPerCard).map((btn: any) => ({
-      type: 'button',
-      action: {
-        type: 'postback',
-        label: btn.label,
-        data: JSON.stringify({
-          action: btn.action,
-          value: btn.value || '',
-          next: btn.next || ''
-        })
-      },
-      style: 'primary',
-      color: iosColors.primary,
-      height: 'md'
+    const cardButtons = step.buttons.slice(i, i + buttonsPerCard).map((btn: any, btnIndex: number) => ({
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        {
+          type: 'button',
+          action: {
+            type: 'postback',
+            label: btn.label,
+            data: JSON.stringify({
+              action: btn.action,
+              value: btn.value || '',
+              next: btn.next || ''
+            })
+          },
+          style: 'primary',
+          color: btnIndex === 0 ? iosColors.primary : iosColors.systemBlue,
+          height: 'md',
+          gravity: 'center'
+        }
+      ],
+      margin: btnIndex === 0 ? 'none' : 'sm',
+      cornerRadius: '12px',
+      backgroundColor: btnIndex === 0 ? iosColors.primary + '15' : iosColors.systemBlue + '15',
+      paddingAll: '2px'
     }))
 
     cards.push({
@@ -375,18 +437,36 @@ function createCarouselMessage(step: any): Message {
         layout: 'vertical',
         contents: [
           {
-            type: 'text',
-            text: i === 0 ? step.title : `選択肢 ${Math.floor(i/buttonsPerCard) + 1}`,
-            weight: 'bold',
-            size: 'md',
-            color: '#FFFFFF',
-            wrap: true,
-            align: 'center'
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              {
+                type: 'text',
+                text: getStepIcon(step.title),
+                size: 'lg',
+                weight: 'bold',
+                color: '#FFFFFF',
+                flex: 0,
+                margin: 'none'
+              },
+              {
+                type: 'text',
+                text: i === 0 ? step.title : `選択肢 ${Math.floor(i/buttonsPerCard) + 1}`,
+                weight: 'bold',
+                size: 'md',
+                color: '#FFFFFF',
+                wrap: true,
+                flex: 1,
+                margin: 'sm',
+                gravity: 'center'
+              }
+            ],
+            spacing: 'sm'
           }
         ],
         backgroundColor: iosColors.primary,
-        paddingAll: '20px',
-        cornerRadius: '12px'
+        paddingAll: '16px',
+        cornerRadius: '16px'
       },
       body: i === 0 ? {
         type: 'box',
@@ -398,20 +478,25 @@ function createCarouselMessage(step: any): Message {
             wrap: true,
             size: 'sm',
             color: iosColors.label,
-            lineSpacing: '6px'
+            lineSpacing: '5px'
           }
         ],
-        paddingAll: '16px',
+        paddingAll: '14px',
         backgroundColor: iosColors.background
       } : {
         type: 'box',
         layout: 'vertical',
         contents: [
           {
-            type: 'spacer',
-            size: 'sm'
+            type: 'text',
+            text: '以下から選択してください',
+            wrap: true,
+            size: 'sm',
+            color: iosColors.systemGray,
+            align: 'center'
           }
         ],
+        paddingAll: '14px',
         backgroundColor: iosColors.background
       },
       footer: {
@@ -419,7 +504,7 @@ function createCarouselMessage(step: any): Message {
         layout: 'vertical',
         contents: cardButtons,
         spacing: 'sm',
-        paddingAll: '16px',
+        paddingAll: '14px',
         backgroundColor: iosColors.background
       },
       styles: {
