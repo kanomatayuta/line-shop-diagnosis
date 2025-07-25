@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Client, Message, WebhookEvent, MessageEvent, PostbackEvent, FollowEvent } from '@line/bot-sdk'
+import { getCurrentSurveyConfig } from '../survey-config/route'
 
 console.log('🔥 ULTRA WEBHOOK - 限界を越えたLINE Bot')
 
@@ -99,6 +100,16 @@ const STEP_BY_STEP_SURVEY = {
 // ユーザー状態管理
 const userSessions = new Map<string, { currentStep: string; data: any }>()
 
+// 動的アンケート設定を取得
+function getDynamicSurveyConfig() {
+  try {
+    return getCurrentSurveyConfig()
+  } catch (error) {
+    console.error('❌ Failed to get dynamic config, using fallback:', error)
+    return STEP_BY_STEP_SURVEY
+  }
+}
+
 // 究極のフレックスメッセージ作成
 function createUltimateFlexMessage(step: any): Message {
   console.log(`🎨 Creating ULTIMATE flex for: ${step.title}`)
@@ -195,14 +206,19 @@ async function handleUltimateMessage(event: MessageEvent): Promise<Message> {
       text.includes('start')) {
     
     console.log(`🚀 ULTIMATE START for ${userId} with trigger: ${text}`)
+    const dynamicConfig = getDynamicSurveyConfig()
     userSessions.set(userId, { currentStep: 'welcome', data: {} })
-    return createUltimateFlexMessage(STEP_BY_STEP_SURVEY.welcome)
+    return createUltimateFlexMessage(dynamicConfig.welcome)
   }
 
   // 現在の状態を確認
   const session = userSessions.get(userId)
-  if (session?.currentStep && STEP_BY_STEP_SURVEY[session.currentStep as keyof typeof STEP_BY_STEP_SURVEY]) {
-    return createUltimateFlexMessage(STEP_BY_STEP_SURVEY[session.currentStep as keyof typeof STEP_BY_STEP_SURVEY])
+  if (session?.currentStep) {
+    const dynamicConfig = getDynamicSurveyConfig()
+    const currentStep = dynamicConfig[session.currentStep as keyof typeof dynamicConfig]
+    if (currentStep) {
+      return createUltimateFlexMessage(currentStep)
+    }
   }
 
   // デフォルト
@@ -223,27 +239,33 @@ async function handleUltimatePostback(event: PostbackEvent): Promise<Message> {
     const { action, value, next } = data
 
     // 回答データを保存して次のステップに進む
-    if (next && STEP_BY_STEP_SURVEY[next as keyof typeof STEP_BY_STEP_SURVEY]) {
-      console.log(`➡️ ULTIMATE MOVE to: ${next}`)
+    if (next) {
+      const dynamicConfig = getDynamicSurveyConfig()
+      const nextStep = dynamicConfig[next as keyof typeof dynamicConfig]
       
-      // 現在のセッションデータを取得
-      const currentSession = userSessions.get(userId) || { currentStep: '', data: {} }
-      
-      // 回答データを保存
-      const updatedData = { ...currentSession.data }
-      if (action && value) {
-        updatedData[action] = value
+      if (nextStep) {
+        console.log(`➡️ ULTIMATE MOVE to: ${next}`)
+        
+        // 現在のセッションデータを取得
+        const currentSession = userSessions.get(userId) || { currentStep: '', data: {} }
+        
+        // 回答データを保存
+        const updatedData = { ...currentSession.data }
+        if (action && value) {
+          updatedData[action] = value
+        }
+        
+        userSessions.set(userId, { currentStep: next, data: updatedData })
+        return createUltimateFlexMessage(nextStep)
       }
-      
-      userSessions.set(userId, { currentStep: next, data: updatedData })
-      return createUltimateFlexMessage(STEP_BY_STEP_SURVEY[next as keyof typeof STEP_BY_STEP_SURVEY])
     }
 
     // 特別なアクション
     switch (action) {
       case 'restart':
+        const dynamicConfig = getDynamicSurveyConfig()
         userSessions.set(userId, { currentStep: 'welcome', data: {} })
-        return createUltimateFlexMessage(STEP_BY_STEP_SURVEY.welcome)
+        return createUltimateFlexMessage(dynamicConfig.welcome)
       
       case 'report':
         return {
@@ -258,8 +280,9 @@ async function handleUltimatePostback(event: PostbackEvent): Promise<Message> {
         }
       
       case 'start':
+        const startConfig = getDynamicSurveyConfig()
         userSessions.set(userId, { currentStep: 'step1', data: {} })
-        return createUltimateFlexMessage(STEP_BY_STEP_SURVEY.step1)
+        return createUltimateFlexMessage(startConfig.step1)
       
       default:
         return {
@@ -325,8 +348,9 @@ export async function POST(request: NextRequest) {
         case 'follow':
           console.log('👋 ULTIMATE FOLLOW EVENT - AUTO SURVEY!')
           const userId = event.source.userId!
+          const followConfig = getDynamicSurveyConfig()
           userSessions.set(userId, { currentStep: 'welcome', data: {} })
-          ultimateMessage = createUltimateFlexMessage(STEP_BY_STEP_SURVEY.welcome)
+          ultimateMessage = createUltimateFlexMessage(followConfig.welcome)
           break
           
         default:
