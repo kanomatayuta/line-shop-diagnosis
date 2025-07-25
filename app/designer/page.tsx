@@ -186,8 +186,8 @@ export default function DesignerPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">🚀 LINE Bot Designer</h1>
-          <p className="text-lg text-gray-600">ステップ形式アンケート管理システム</p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">🚀 フローチャート</h1>
+          <p className="text-lg text-gray-600">店舗売却診断フロー管理システム</p>
           
           {/* タブナビゲーション */}
           <div className="flex justify-center mt-6 space-x-4">
@@ -254,7 +254,7 @@ export default function DesignerPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <p className="text-gray-600"><span className="font-semibold">バージョン:</span> v3.0.0</p>
-              <p className="text-gray-600"><span className="font-semibold">アンケート形式:</span> ステップ1-3形式</p>
+              <p className="text-gray-600"><span className="font-semibold">診断形式:</span> 店舗売却診断</p>
               <p className="text-gray-600"><span className="font-semibold">応答時間:</span> 0.2ms</p>
             </div>
             <div className="space-y-2">
@@ -271,7 +271,7 @@ export default function DesignerPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mt-8 bg-white rounded-xl p-6 shadow-lg"
         >
-          <h3 className="text-xl font-bold text-gray-800 mb-4">アンケートフロー</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-4">診断フロー</h3>
           <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2">1</div>

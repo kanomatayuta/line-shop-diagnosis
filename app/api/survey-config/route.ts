@@ -195,8 +195,3 @@ export async function POST(request: NextRequest) {
     }, { status: 500 })
   }
 }
-
-// 現在の設定を取得する関数（他のファイルから使用）
-export function getCurrentSurveyConfig() {
-  return currentSurveyConfig
-}
