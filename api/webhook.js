@@ -130,38 +130,111 @@ async function handleEvent(event) {
             return null;
           }
           userStates[userId].area = data.value;
-          userStates[userId].step = 'business_type';
-          return sendBusinessTypeQuestion(event.replyToken);
           
-        case 'business_type':
-          // 既に業種が選択されている場合は無視
-          if (userStates[userId].step !== 'business_type') {
-            console.log('Business type already selected or wrong step');
+          // エリアが「その他」の場合は直接結果表示
+          if (data.value === 'other') {
+            userStates[userId].step = 'completed';
+            return sendOtherAreaResult(event.replyToken);
+          }
+          
+          // 一都三県の場合は経営状況を質問
+          userStates[userId].step = 'business_status';
+          return sendBusinessStatusQuestion(event.replyToken);
+          
+        case 'business_status':
+          if (userStates[userId].step !== 'business_status') {
+            console.log('Business status already selected or wrong step');
             return null;
           }
-          userStates[userId].businessType = data.value;
-          userStates[userId].step = 'size';
-          return sendSizeQuestion(event.replyToken);
+          userStates[userId].businessStatus = data.value;
           
-        case 'size':
-          // 既にサイズが選択されている場合は無視
-          if (userStates[userId].step !== 'size') {
-            console.log('Size already selected or wrong step');
+          if (data.value === 'profitable') {
+            // 黒字の場合は営業利益を質問
+            userStates[userId].step = 'profit';
+            return sendProfitQuestion(event.replyToken);
+          } else {
+            // 赤字の場合は階数を質問
+            userStates[userId].step = 'floor';
+            return sendFloorQuestion(event.replyToken);
+          }
+          
+        case 'profit':
+          if (userStates[userId].step !== 'profit') {
+            console.log('Profit already selected or wrong step');
             return null;
           }
-          userStates[userId].size = data.value;
-          userStates[userId].step = 'years';
-          return sendYearsQuestion(event.replyToken);
-          
-        case 'years':
-          // 既に年数が選択されている場合は無視
-          if (userStates[userId].step !== 'years') {
-            console.log('Years already selected or wrong step');
-            return null;
-          }
-          userStates[userId].years = data.value;
+          userStates[userId].profit = data.value;
           userStates[userId].step = 'completed';
-          return sendDiagnosisResult(event.replyToken, userStates[userId]);
+          return sendProfitableResult(event.replyToken, userStates[userId]);
+          
+        case 'floor':
+          if (userStates[userId].step !== 'floor') {
+            console.log('Floor already selected or wrong step');
+            return null;
+          }
+          userStates[userId].floor = data.value;
+          
+          if (data.value === 'first') {
+            // 1階の場合は結果表示
+            userStates[userId].step = 'completed';
+            return sendProfitableResult(event.replyToken, userStates[userId]);
+          } else {
+            // 1階以外の場合は商業施設を質問
+            userStates[userId].step = 'commercial';
+            return sendCommercialQuestion(event.replyToken);
+          }
+          
+        case 'commercial':
+          if (userStates[userId].step !== 'commercial') {
+            console.log('Commercial already selected or wrong step');
+            return null;
+          }
+          userStates[userId].commercial = data.value;
+          
+          if (data.value === 'yes') {
+            // 商業施設の場合は結果表示
+            userStates[userId].step = 'completed';
+            return sendProfitableResult(event.replyToken, userStates[userId]);
+          } else {
+            // 商業施設以外の場合は固定資産を質問
+            userStates[userId].step = 'assets';
+            return sendAssetsQuestion(event.replyToken);
+          }
+          
+        case 'assets':
+          if (userStates[userId].step !== 'assets') {
+            console.log('Assets already selected or wrong step');
+            return null;
+          }
+          userStates[userId].assets = data.value;
+          
+          if (data.value === 'fixed_assets') {
+            // 固定資産ありの場合は従業員を質問
+            userStates[userId].step = 'employees';
+            return sendEmployeesQuestion(event.replyToken);
+          } else {
+            // その他の場合は結果表示
+            userStates[userId].step = 'completed';
+            return sendLowValueResult(event.replyToken, userStates[userId]);
+          }
+          
+        case 'employees':
+          if (userStates[userId].step !== 'employees') {
+            console.log('Employees already selected or wrong step');
+            return null;
+          }
+          userStates[userId].employees = data.value;
+          userStates[userId].step = 'completed';
+          return sendLowValueResult(event.replyToken, userStates[userId]);
+          
+        case 'consultation':
+          // 相談希望の処理
+          userStates[userId].consultation = data.value;
+          if (data.value === 'yes') {
+            return sendConsultationLink(event.replyToken, userStates[userId]);
+          } else {
+            return sendConsultationDecline(event.replyToken);
+          }
           
         default:
           console.log('Unknown action:', data.action);
@@ -214,45 +287,29 @@ function sendWelcomeMessage(replyToken) {
         contents: [
           {
             type: 'text',
-            text: 'Goodbuyが運営する「店舗売却LINE診断」にご登録いただきありがとうございます。',
+            text: 'Goodbuyが運営する「店舗売却LINE診断」\nご登録いただきありがとうございます！',
             size: 'md',
             wrap: true,
             color: '#333333',
-            margin: 'md'
+            margin: 'md',
+            weight: 'bold'
           },
           {
-            type: 'separator',
+            type: 'text',
+            text: 'たった1分のアンケートに回答するだけで、店舗売却額可能額がいくらになるか診断いたします💡',
+            size: 'sm',
+            wrap: true,
+            color: '#333333',
             margin: 'lg'
           },
           {
-            type: 'box',
-            layout: 'vertical',
-            contents: [
-              {
-                type: 'text',
-                text: '✨ たった1分で完了',
-                size: 'sm',
-                color: '#304992',
-                weight: 'bold',
-                margin: 'lg'
-              },
-              {
-                type: 'text',
-                text: '📊 無料で査定額がわかる',
-                size: 'sm',
-                color: '#304992',
-                weight: 'bold',
-                margin: 'sm'
-              },
-              {
-                type: 'text',
-                text: '🎯 専門家による正確な診断',
-                size: 'sm',
-                color: '#304992',
-                weight: 'bold',
-                margin: 'sm'
-              }
-            ]
+            type: 'text',
+            text: 'まずは、以下の簡単なご質問にお答えください😊',
+            size: 'sm',
+            wrap: true,
+            color: '#304992',
+            margin: 'lg',
+            weight: 'bold'
           }
         ],
         spacing: 'md',
@@ -269,10 +326,18 @@ function sendWelcomeMessage(replyToken) {
             color: '#304992',
             action: {
               type: 'postback',
-              label: '🚀 無料診断スタート',
+              label: '無料診断はこちら！',
               data: JSON.stringify({ action: 'start' }),
               displayText: '診断開始'
             }
+          },
+          {
+            type: 'text',
+            text: '※タップしてスタート',
+            size: 'xs',
+            color: '#666666',
+            align: 'center',
+            margin: 'sm'
           }
         ],
         paddingAll: '20px'
