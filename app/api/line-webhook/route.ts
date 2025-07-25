@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Client, Message, WebhookEvent, MessageEvent, PostbackEvent, FollowEvent } from '@line/bot-sdk'
-import { getCurrentSurveyConfig } from '../survey-config/route'
+
+// 動的設定の取得（ローカル関数として実装）
+async function getCurrentSurveyConfig() {
+  try {
+    // API エンドポイントから設定を取得
+    const response = await fetch(`${process.env.VERCEL_URL || 'https://line-shop-diagnosis.vercel.app'}/api/survey-config`)
+    const data = await response.json()
+    if (data.success) {
+      return data.config
+    }
+  } catch (error) {
+    console.error('Failed to fetch dynamic config:', error)
+  }
+  
+  // フォールバック設定
+  return STEP_BY_STEP_SURVEY
+}
 
 console.log('🔥 ULTRA WEBHOOK - 限界を越えたLINE Bot')
 
@@ -101,9 +117,9 @@ const STEP_BY_STEP_SURVEY = {
 const userSessions = new Map<string, { currentStep: string; data: any }>()
 
 // 動的アンケート設定を取得
-function getDynamicSurveyConfig() {
+async function getDynamicSurveyConfig() {
   try {
-    return getCurrentSurveyConfig()
+    return await getCurrentSurveyConfig()
   } catch (error) {
     console.error('❌ Failed to get dynamic config, using fallback:', error)
     return STEP_BY_STEP_SURVEY
@@ -206,7 +222,7 @@ async function handleUltimateMessage(event: MessageEvent): Promise<Message> {
       text.includes('start')) {
     
     console.log(`🚀 ULTIMATE START for ${userId} with trigger: ${text}`)
-    const dynamicConfig = getDynamicSurveyConfig()
+    const dynamicConfig = await getDynamicSurveyConfig()
     userSessions.set(userId, { currentStep: 'welcome', data: {} })
     return createUltimateFlexMessage(dynamicConfig.welcome)
   }
@@ -214,7 +230,7 @@ async function handleUltimateMessage(event: MessageEvent): Promise<Message> {
   // 現在の状態を確認
   const session = userSessions.get(userId)
   if (session?.currentStep) {
-    const dynamicConfig = getDynamicSurveyConfig()
+    const dynamicConfig = await getDynamicSurveyConfig()
     const currentStep = dynamicConfig[session.currentStep as keyof typeof dynamicConfig]
     if (currentStep) {
       return createUltimateFlexMessage(currentStep)
@@ -240,7 +256,7 @@ async function handleUltimatePostback(event: PostbackEvent): Promise<Message> {
 
     // 回答データを保存して次のステップに進む
     if (next) {
-      const dynamicConfig = getDynamicSurveyConfig()
+      const dynamicConfig = await getDynamicSurveyConfig()
       const nextStep = dynamicConfig[next as keyof typeof dynamicConfig]
       
       if (nextStep) {
@@ -263,7 +279,7 @@ async function handleUltimatePostback(event: PostbackEvent): Promise<Message> {
     // 特別なアクション
     switch (action) {
       case 'restart':
-        const dynamicConfig = getDynamicSurveyConfig()
+        const dynamicConfig = await getDynamicSurveyConfig()
         userSessions.set(userId, { currentStep: 'welcome', data: {} })
         return createUltimateFlexMessage(dynamicConfig.welcome)
       
@@ -280,7 +296,7 @@ async function handleUltimatePostback(event: PostbackEvent): Promise<Message> {
         }
       
       case 'start':
-        const startConfig = getDynamicSurveyConfig()
+        const startConfig = await getDynamicSurveyConfig()
         userSessions.set(userId, { currentStep: 'step1', data: {} })
         return createUltimateFlexMessage(startConfig.step1)
       
@@ -348,7 +364,7 @@ export async function POST(request: NextRequest) {
         case 'follow':
           console.log('👋 ULTIMATE FOLLOW EVENT - AUTO SURVEY!')
           const userId = event.source.userId!
-          const followConfig = getDynamicSurveyConfig()
+          const followConfig = await getDynamicSurveyConfig()
           userSessions.set(userId, { currentStep: 'welcome', data: {} })
           ultimateMessage = createUltimateFlexMessage(followConfig.welcome)
           break
