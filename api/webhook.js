@@ -139,7 +139,7 @@ async function handleEvent(event) {
           
           // 一都三県の場合は経営状況を質問
           userStates[userId].step = 'business_status';
-          return sendBusinessStatusQuestion(event.replyToken);
+          return await sendBusinessStatusQuestion(event.replyToken);
           
         case 'business_status':
           if (userStates[userId].step !== 'business_status') {
@@ -151,11 +151,11 @@ async function handleEvent(event) {
           if (data.value === 'profitable') {
             // 黒字の場合は営業利益を質問
             userStates[userId].step = 'profit';
-            return sendProfitQuestion(event.replyToken);
+            return await sendProfitQuestion(event.replyToken);
           } else {
             // 赤字の場合は階数を質問
             userStates[userId].step = 'floor';
-            return sendFloorQuestion(event.replyToken);
+            return await sendFloorQuestion(event.replyToken);
           }
           
         case 'profit':
@@ -181,7 +181,7 @@ async function handleEvent(event) {
           } else {
             // 1階以外の場合は商業施設を質問
             userStates[userId].step = 'commercial';
-            return sendCommercialQuestion(event.replyToken);
+            return await sendCommercialQuestion(event.replyToken);
           }
           
         case 'commercial':
@@ -198,7 +198,7 @@ async function handleEvent(event) {
           } else {
             // 商業施設以外の場合は固定資産を質問
             userStates[userId].step = 'assets';
-            return sendAssetsQuestion(event.replyToken);
+            return await sendAssetsQuestion(event.replyToken);
           }
           
         case 'assets':
@@ -211,7 +211,7 @@ async function handleEvent(event) {
           if (data.value === 'fixed_assets') {
             // 固定資産ありの場合は従業員を質問
             userStates[userId].step = 'employees';
-            return sendEmployeesQuestion(event.replyToken);
+            return await sendEmployeesQuestion(event.replyToken);
           } else {
             // その他の場合は結果表示
             userStates[userId].step = 'completed';
