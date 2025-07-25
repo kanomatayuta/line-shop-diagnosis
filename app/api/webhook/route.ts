@@ -340,6 +340,14 @@ export async function GET() {
     status: 'healthy',
     service: 'LINE Flow Designer Pro Webhook',
     version: '4.0.0',
+    endpoint: '/api/webhook',
+    methods: ['POST', 'GET'],
+    description: 'Ready to receive LINE webhook events',
+    config: {
+      hasToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
+      hasSecret: !!process.env.LINE_CHANNEL_SECRET,
+      environment: process.env.NODE_ENV || 'development'
+    },
     timestamp: new Date().toISOString()
   })
 }
