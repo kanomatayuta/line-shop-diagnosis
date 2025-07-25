@@ -1,4 +1,8 @@
 const line = require('@line/bot-sdk');
+const FlowLoader = require('../flow-loader');
+
+// フロー設定ローダーを初期化
+const flowLoader = new FlowLoader();
 
 // LINE設定
 const config = {
@@ -252,6 +256,13 @@ async function handleEvent(event) {
 }
 
 function sendWelcomeMessage(replyToken) {
+  // フロー設定からウェルカムメッセージを取得
+  const welcomeMessage = flowLoader.createFlexMessage('start');
+  if (welcomeMessage) {
+    return client.replyMessage(replyToken, welcomeMessage);
+  }
+  
+  // フォールバック用のデフォルトメッセージ
   const message = {
     type: 'flex',
     altText: '店舗売却LINE診断へようこそ',

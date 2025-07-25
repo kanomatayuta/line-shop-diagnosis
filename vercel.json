@@ -5,5 +5,15 @@
     "api/*.js": {
       "maxDuration": 10
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/api/admin"
+    },
+    {
+      "source": "/admin/(.*)",
+      "destination": "/api/admin/$1"
+    }
+  ]
 }
