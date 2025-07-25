@@ -1,19 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Client, Message, WebhookEvent, MessageEvent, PostbackEvent, FollowEvent } from '@line/bot-sdk'
+import { Client, Message, WebhookEvent, MessageEvent, PostbackEvent, FollowEvent, ReplyableEvent } from '@line/bot-sdk'
 
 // LINE Bot設定
 const config = {
-  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
-  channelSecret: process.env.LINE_CHANNEL_SECRET || ''
+  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || 'dummy_token_for_build',
+  channelSecret: process.env.LINE_CHANNEL_SECRET || 'dummy_secret_for_build'
 }
 
 console.log('🚀 LINE Bot Config:', {
-  hasToken: !!config.channelAccessToken,
-  hasSecret: !!config.channelSecret,
-  tokenStart: config.channelAccessToken.substring(0, 10) + '...'
+  hasToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
+  hasSecret: !!process.env.LINE_CHANNEL_SECRET,
+  tokenStart: (process.env.LINE_CHANNEL_ACCESS_TOKEN || 'none').substring(0, 10) + '...'
 })
 
-const client = new Client(config)
+// クライアント初期化（環境変数がない場合はnull）
+let client: Client | null = null
+try {
+  if (process.env.LINE_CHANNEL_ACCESS_TOKEN && process.env.LINE_CHANNEL_SECRET) {
+    client = new Client({
+      channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
+      channelSecret: process.env.LINE_CHANNEL_SECRET
+    })
+  }
+} catch (error) {
+  console.warn('⚠️ LINE Client initialization skipped during build')
+}
 
 // 固定アンケートフロー（ライブエンジンに依存しない）
 const SURVEY_FLOW = {
@@ -283,8 +294,15 @@ export async function POST(request: NextRequest) {
           console.log(`❓ Unknown event type: ${event.type}`)
       }
 
-      // メッセージ送信
-      if (replyMessage && event.replyToken) {
+      // メッセージ送信（replyTokenを持つイベントのみ）
+      if (replyMessage && 'replyToken' in event && event.replyToken) {
+        if (!client) {
+          console.error('❌ LINE client not initialized - missing environment variables')
+          return NextResponse.json({ 
+            error: 'LINE client not configured' 
+          }, { status: 500 })
+        }
+        
         try {
           console.log('📤 Sending reply message...')
           await client.replyMessage(event.replyToken, replyMessage)
@@ -292,8 +310,8 @@ export async function POST(request: NextRequest) {
         } catch (error) {
           console.error('❌ Failed to send reply:', error)
           console.error('Token config:', {
-            hasToken: !!config.channelAccessToken,
-            tokenLength: config.channelAccessToken.length
+            hasToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
+            tokenLength: (process.env.LINE_CHANNEL_ACCESS_TOKEN || '').length
           })
         }
       } else {
