@@ -1,9 +1,12 @@
 {
   "version": 2,
   "name": "line-flow-designer-pro",
-  "description": "🚀 LINE Flow Designer Pro - Next Generation Flow Management",
+  "description": "🚀 LINE Flow Designer Pro - Next.js Edition",
+  "framework": "nextjs",
+  "buildCommand": "next build",
+  "outputDirectory": ".next",
   "functions": {
-    "api/*.js": {
+    "app/api/**/*.ts": {
       "maxDuration": 10
     }
   },
