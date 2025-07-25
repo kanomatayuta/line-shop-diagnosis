@@ -17,25 +17,53 @@ class FlowManager {
     async loadFlowConfig() {
         try {
             const response = await fetch('/api/flow-config');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             this.flowConfig = await response.json();
+            
+            // Debug: Check if config loaded properly
+            console.log('Flow config loaded:', this.flowConfig);
+            console.log('Number of nodes:', Object.keys(this.flowConfig?.flowConfig || {}).length);
+            
+            if (!this.flowConfig?.flowConfig || Object.keys(this.flowConfig.flowConfig).length === 0) {
+                throw new Error('Flow config is empty or invalid');
+            }
+            
             this.renderFlow();
             this.updateStatus('フロー設定を読み込みました');
         } catch (error) {
             console.error('フロー設定の読み込みに失敗しました:', error);
             this.updateStatus('フロー設定の読み込みに失敗しました', 'error');
+            this.showErrorMessage(error.message);
         }
     }
     
+    showErrorMessage(message) {
+        const canvas = document.getElementById('flowCanvas');
+        canvas.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 100%; flex-direction: column; color: #666;">
+                <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">フロー設定の読み込みに失敗しました</div>
+                <div style="font-size: 14px; color: #999;">${message}</div>
+                <button onclick="location.reload()" style="margin-top: 16px; padding: 8px 16px; background: #007AFF; color: white; border: none; border-radius: 8px; cursor: pointer;">再読み込み</button>
+            </div>
+        `;
+    }
+    
     initializeCanvas() {
+        console.log('Initializing canvas...');
         this.canvas.innerHTML = `
             <svg id="connections" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;">
                 <defs>
                     <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                        <polygon points="0 0, 10 3.5, 0 7" fill="#304992" />
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#007AFF" />
                     </marker>
                 </defs>
             </svg>
         `;
+        console.log('Canvas initialized');
     }
     
     setupEventListeners() {
@@ -82,29 +110,47 @@ class FlowManager {
     }
     
     renderFlow() {
-        if (!this.flowConfig || !this.flowConfig.flowConfig) return;
+        console.log('renderFlow called');
+        if (!this.flowConfig || !this.flowConfig.flowConfig) {
+            console.log('No flow config available');
+            return;
+        }
         
         // Clear existing nodes
         const existingNodes = this.canvas.querySelectorAll('.node');
+        console.log('Clearing', existingNodes.length, 'existing nodes');
         existingNodes.forEach(node => node.remove());
         
         // Render nodes with improved positioning
-        Object.values(this.flowConfig.flowConfig).forEach(node => {
+        const nodes = Object.values(this.flowConfig.flowConfig);
+        console.log('Rendering', nodes.length, 'nodes');
+        
+        nodes.forEach((node, index) => {
+            console.log(`Creating node ${index + 1}:`, node.id, node.position);
             this.createNodeElement(node);
         });
         
         // Wait for DOM update before drawing connections
         setTimeout(() => {
+            console.log('Drawing connections...');
             this.drawConnections();
+            
+            // Check if nodes are actually in DOM
+            const renderedNodes = this.canvas.querySelectorAll('.node');
+            console.log('Nodes in DOM after render:', renderedNodes.length);
         }, 100);
         
         this.updateNodeCount();
         
         // Auto-fit canvas to show all nodes
-        this.autoFitCanvas();
+        setTimeout(() => {
+            this.autoFitCanvas();
+        }, 200);
     }
     
     createNodeElement(nodeData) {
+        console.log('Creating node element for:', nodeData.id);
+        
         const nodeEl = document.createElement('div');
         nodeEl.className = `node ${nodeData.type}`;
         nodeEl.dataset.id = nodeData.id;
@@ -112,6 +158,7 @@ class FlowManager {
         nodeEl.dataset.y = nodeData.position.y;
         
         const stepText = nodeData.stepNumber ? `Step ${nodeData.stepNumber}` : this.getTypeDisplayName(nodeData.type);
+        console.log('Step text:', stepText);
         
         nodeEl.innerHTML = `
             <div class="node-header">${this.getTypeIcon(nodeData.type)} ${stepText}</div>
@@ -125,17 +172,20 @@ class FlowManager {
         const y = nodeData.position.y * this.scale + this.translateY;
         const scale = this.scale;
         
+        console.log(`Positioning node ${nodeData.id} at (${x}, ${y}) scale: ${scale}`);
+        
+        nodeEl.style.position = 'absolute';
         nodeEl.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
         nodeEl.style.transformOrigin = 'top left';
+        nodeEl.style.zIndex = '10';
         
         nodeEl.addEventListener('click', (e) => {
             e.stopPropagation();
             this.selectNode(nodeData.id);
         });
         
-        // Add to canvas with proper z-index
-        nodeEl.style.zIndex = '10';
         this.canvas.appendChild(nodeEl);
+        console.log('Node element appended to canvas');
     }
     
     getTypeIcon(type) {
@@ -172,38 +222,58 @@ class FlowManager {
     }
     
     drawConnections() {
+        console.log('Drawing connections...');
         const svg = document.getElementById('connections');
+        if (!svg) {
+            console.error('SVG element not found!');
+            return;
+        }
+        
         svg.innerHTML = `
             <defs>
                 <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="#304992" />
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#007AFF" />
                 </marker>
             </defs>
         `;
         
-        if (!this.flowConfig || !this.flowConfig.flowConfig) return;
+        if (!this.flowConfig || !this.flowConfig.flowConfig) {
+            console.log('No flow config for connections');
+            return;
+        }
         
+        let connectionCount = 0;
         Object.values(this.flowConfig.flowConfig).forEach(node => {
             if (node.buttons) {
                 node.buttons.forEach(button => {
                     if (button.next) {
+                        console.log(`Drawing connection: ${node.id} -> ${button.next}`);
                         this.drawConnection(node.id, button.next);
+                        connectionCount++;
                     }
                 });
             }
         });
+        console.log(`Drew ${connectionCount} connections`);
     }
     
     drawConnection(fromId, toId) {
         const fromNode = this.canvas.querySelector(`[data-id="${fromId}"]`);
         const toNode = this.canvas.querySelector(`[data-id="${toId}"]`);
         
-        if (!fromNode || !toNode) return;
+        if (!fromNode || !toNode) {
+            console.warn(`Cannot draw connection ${fromId} -> ${toId}: missing nodes`);
+            return;
+        }
         
         const fromRect = this.getNodeCenter(fromNode);
         const toRect = this.getNodeCenter(toNode);
         
         const svg = document.getElementById('connections');
+        if (!svg) {
+            console.error('SVG connections element not found');
+            return;
+        }
         
         // Create curved path instead of straight line for better visual flow
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -220,13 +290,14 @@ class FlowManager {
         const pathData = `M ${fromRect.x} ${fromRect.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${toRect.x} ${toRect.y}`;
         
         path.setAttribute('d', pathData);
-        path.setAttribute('stroke', 'var(--ios-blue)');
+        path.setAttribute('stroke', '#007AFF');
         path.setAttribute('stroke-width', '2');
         path.setAttribute('fill', 'none');
         path.setAttribute('marker-end', 'url(#arrowhead)');
         path.setAttribute('opacity', '0.8');
         
         svg.appendChild(path);
+        console.log(`Connection drawn: ${fromId} -> ${toId}`);
     }
     
     getNodeCenter(nodeEl) {
