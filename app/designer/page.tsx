@@ -25,6 +25,26 @@ interface SurveyConfig {
   [key: string]: SurveyStep
 }
 
+// iOS Design System Colors
+const iosColors = {
+  systemBlue: '#007AFF',
+  systemGreen: '#34C759',
+  systemOrange: '#FF9500',
+  systemRed: '#FF3B30',
+  systemPurple: '#AF52DE',
+  systemPink: '#FF2D55',
+  systemYellow: '#FFCC00',
+  systemGray: '#8E8E93',
+  systemGray2: '#AEAEB2',
+  systemGray3: '#C7C7CC',
+  systemGray4: '#D1D1D6',
+  systemGray5: '#E5E5EA',
+  systemGray6: '#F2F2F7',
+  background: '#F2F2F7',
+  secondaryBackground: '#FFFFFF',
+  tertiaryBackground: '#FFFFFF',
+}
+
 export default function DesignerPage() {
   const [stats, setStats] = useState<SurveyStats>({
     totalResponses: 0,
@@ -123,11 +143,14 @@ export default function DesignerPage() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl p-6 shadow-lg border border-gray-100"
-      style={{ borderLeft: `4px solid ${color}` }}
+      className="bg-white rounded-2xl p-6 shadow-sm"
+      style={{ 
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+        border: '1px solid rgba(0, 0, 0, 0.04)'
+      }}
     >
-      <h3 className="text-lg font-semibold text-gray-700 mb-2">{title}</h3>
-      <p className="text-3xl font-bold" style={{ color }}>{value}</p>
+      <h3 className="text-sm font-medium mb-1" style={{ color: iosColors.systemGray }}>{title}</h3>
+      <p className="text-4xl font-semibold" style={{ color }}>{value}</p>
     </motion.div>
   )
 
@@ -138,9 +161,13 @@ export default function DesignerPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl p-6 shadow-lg"
+        className="bg-white rounded-2xl p-6 shadow-sm"
+        style={{ 
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+          border: '1px solid rgba(0, 0, 0, 0.04)'
+        }}
       >
-        <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
+        <h3 className="text-lg font-semibold mb-4">{title}</h3>
         <div className="space-y-3">
           {Object.entries(data).map(([key, value], index) => {
             const percentage = total > 0 ? (value / total) * 100 : 0
@@ -151,11 +178,11 @@ export default function DesignerPage() {
                     className="w-4 h-4 rounded-full"
                     style={{ backgroundColor: colors[index % colors.length] }}
                   />
-                  <span className="text-gray-700 font-medium">{key}</span>
+                  <span className="font-medium" style={{ color: '#000000' }}>{key}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-gray-600">{value}件</span>
-                  <span className="text-sm text-gray-500">({percentage.toFixed(1)}%)</span>
+                  <span style={{ color: iosColors.systemGray }}>{value}件</span>
+                  <span className="text-sm" style={{ color: iosColors.systemGray2 }}>({percentage.toFixed(1)}%)</span>
                 </div>
               </div>
             )
@@ -167,18 +194,22 @@ export default function DesignerPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: iosColors.background }}>
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
+          className="w-12 h-12 rounded-full"
+          style={{ 
+            border: `3px solid ${iosColors.systemGray5}`,
+            borderTopColor: iosColors.systemBlue
+          }}
         />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen" style={{ backgroundColor: iosColors.background }}>
       <div className="container mx-auto px-4 py-8">
         {/* ヘッダー */}
         <motion.div
@@ -186,31 +217,44 @@ export default function DesignerPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">🚀 フローチャート</h1>
-          <p className="text-lg text-gray-600">店舗売却診断フロー管理システム</p>
+          <h1 className="text-4xl font-bold mb-2" style={{ color: '#000000' }}>フローチャート</h1>
+          <p className="text-lg" style={{ color: iosColors.systemGray }}>店舗売却診断フロー管理システム</p>
           
           {/* タブナビゲーション */}
-          <div className="flex justify-center mt-6 space-x-4">
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                activeTab === 'dashboard'
-                  ? 'bg-blue-500 text-white shadow-lg'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              📊 ダッシュボード
-            </button>
-            <button
-              onClick={() => setActiveTab('editor')}
-              className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                activeTab === 'editor'
-                  ? 'bg-blue-500 text-white shadow-lg'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              ✏️ フローエディター
-            </button>
+          <div className="flex justify-center mt-6">
+            <div className="bg-white rounded-lg p-1 shadow-sm" style={{ 
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+              border: '1px solid rgba(0, 0, 0, 0.04)'
+            }}>
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`px-6 py-2 rounded-md font-medium transition-all ${
+                  activeTab === 'dashboard'
+                    ? 'text-white'
+                    : 'text-gray-600'
+                }`}
+                style={{
+                  backgroundColor: activeTab === 'dashboard' ? iosColors.systemBlue : 'transparent',
+                  color: activeTab === 'dashboard' ? 'white' : iosColors.systemGray
+                }}
+              >
+                ダッシュボード
+              </button>
+              <button
+                onClick={() => setActiveTab('editor')}
+                className={`px-6 py-2 rounded-md font-medium transition-all ${
+                  activeTab === 'editor'
+                    ? 'text-white'
+                    : 'text-gray-600'
+                }`}
+                style={{
+                  backgroundColor: activeTab === 'editor' ? iosColors.systemBlue : 'transparent',
+                  color: activeTab === 'editor' ? 'white' : iosColors.systemGray
+                }}
+              >
+                フローエディター
+              </button>
+            </div>
           </div>
         </motion.div>
 
@@ -219,28 +263,28 @@ export default function DesignerPage() {
           <>
             {/* 統計カード */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <StatCard title="総回答数" value={stats.totalResponses} color="#3B82F6" />
-              <StatCard title="ステップ1完了" value={Object.values(stats.step1Stats).reduce((a, b) => a + b, 0)} color="#10B981" />
-              <StatCard title="ステップ2完了" value={Object.values(stats.step2Stats).reduce((a, b) => a + b, 0)} color="#F59E0B" />
-              <StatCard title="ステップ3完了" value={Object.values(stats.step3Stats).reduce((a, b) => a + b, 0)} color="#EF4444" />
+              <StatCard title="総回答数" value={stats.totalResponses} color={iosColors.systemBlue} />
+              <StatCard title="ステップ1完了" value={Object.values(stats.step1Stats).reduce((a, b) => a + b, 0)} color={iosColors.systemGreen} />
+              <StatCard title="ステップ2完了" value={Object.values(stats.step2Stats).reduce((a, b) => a + b, 0)} color={iosColors.systemOrange} />
+              <StatCard title="ステップ3完了" value={Object.values(stats.step3Stats).reduce((a, b) => a + b, 0)} color={iosColors.systemRed} />
             </div>
 
         {/* チャート */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <StepChart 
-            title="📋 ステップ1: 基本情報"
+            title="ステップ1: 基本情報"
             data={stats.step1Stats}
-            colors={['#3B82F6', '#10B981', '#F59E0B', '#EF4444']}
+            colors={[iosColors.systemBlue, iosColors.systemGreen, iosColors.systemOrange, iosColors.systemRed]}
           />
           <StepChart 
-            title="🎯 ステップ2: 目標設定"
+            title="ステップ2: 目標設定"
             data={stats.step2Stats}
-            colors={['#8B5CF6', '#06B6D4', '#84CC16', '#F97316', '#EC4899']}
+            colors={[iosColors.systemPurple, iosColors.systemPink, iosColors.systemYellow, iosColors.systemOrange, iosColors.systemRed]}
           />
           <StepChart 
-            title="⚡ ステップ3: 行動スタイル"
+            title="ステップ3: 行動スタイル"
             data={stats.step3Stats}
-            colors={['#6366F1', '#14B8A6', '#F59E0B', '#EF4444']}
+            colors={[iosColors.systemBlue, iosColors.systemGreen, iosColors.systemOrange, iosColors.systemRed]}
           />
         </div>
 
@@ -248,19 +292,23 @@ export default function DesignerPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-8 bg-white rounded-xl p-6 shadow-lg"
+          className="mt-8 bg-white rounded-2xl p-6 shadow-sm"
+          style={{ 
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+            border: '1px solid rgba(0, 0, 0, 0.04)'
+          }}
         >
-          <h3 className="text-xl font-bold text-gray-800 mb-4">システム情報</h3>
+          <h3 className="text-lg font-semibold mb-4">システム情報</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <p className="text-gray-600"><span className="font-semibold">バージョン:</span> v3.0.0</p>
-              <p className="text-gray-600"><span className="font-semibold">診断形式:</span> 店舗売却診断</p>
-              <p className="text-gray-600"><span className="font-semibold">応答時間:</span> 0.2ms</p>
+              <p style={{ color: iosColors.systemGray }}><span className="font-medium">バージョン:</span> v3.0.0</p>
+              <p style={{ color: iosColors.systemGray }}><span className="font-medium">診断形式:</span> 店舗売却診断</p>
+              <p style={{ color: iosColors.systemGray }}><span className="font-medium">応答時間:</span> 0.2ms</p>
             </div>
             <div className="space-y-2">
-              <p className="text-gray-600"><span className="font-semibold">稼働率:</span> 99.9%</p>
-              <p className="text-gray-600"><span className="font-semibold">環境:</span> Production</p>
-              <p className="text-gray-600"><span className="font-semibold">最終更新:</span> {new Date().toLocaleString('ja-JP')}</p>
+              <p style={{ color: iosColors.systemGray }}><span className="font-medium">稼働率:</span> 99.9%</p>
+              <p style={{ color: iosColors.systemGray }}><span className="font-medium">環境:</span> Production</p>
+              <p style={{ color: iosColors.systemGray }}><span className="font-medium">最終更新:</span> {new Date().toLocaleString('ja-JP')}</p>
             </div>
           </div>
         </motion.div>
@@ -269,32 +317,36 @@ export default function DesignerPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-8 bg-white rounded-xl p-6 shadow-lg"
+          className="mt-8 bg-white rounded-2xl p-6 shadow-sm"
+          style={{ 
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+            border: '1px solid rgba(0, 0, 0, 0.04)'
+          }}
         >
-          <h3 className="text-xl font-bold text-gray-800 mb-4">診断フロー</h3>
+          <h3 className="text-lg font-semibold mb-4">診断フロー</h3>
           <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2">1</div>
-              <p className="text-sm font-semibold text-gray-700">基本情報</p>
-              <p className="text-xs text-gray-500">職業・立場</p>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2" style={{ backgroundColor: iosColors.systemBlue }}>1</div>
+              <p className="text-sm font-medium">基本情報</p>
+              <p className="text-xs" style={{ color: iosColors.systemGray2 }}>職業・立場</p>
             </div>
-            <div className="hidden md:block text-gray-400">→</div>
+            <div className="hidden md:block" style={{ color: iosColors.systemGray3 }}>→</div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2">2</div>
-              <p className="text-sm font-semibold text-gray-700">目標設定</p>
-              <p className="text-xs text-gray-500">重視する分野</p>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2" style={{ backgroundColor: iosColors.systemGreen }}>2</div>
+              <p className="text-sm font-medium">目標設定</p>
+              <p className="text-xs" style={{ color: iosColors.systemGray2 }}>重視する分野</p>
             </div>
-            <div className="hidden md:block text-gray-400">→</div>
+            <div className="hidden md:block" style={{ color: iosColors.systemGray3 }}>→</div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2">3</div>
-              <p className="text-sm font-semibold text-gray-700">行動スタイル</p>
-              <p className="text-xs text-gray-500">取り組み方</p>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2" style={{ backgroundColor: iosColors.systemPurple }}>3</div>
+              <p className="text-sm font-medium">行動スタイル</p>
+              <p className="text-xs" style={{ color: iosColors.systemGray2 }}>取り組み方</p>
             </div>
-            <div className="hidden md:block text-gray-400">→</div>
+            <div className="hidden md:block" style={{ color: iosColors.systemGray3 }}>→</div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2">📊</div>
-              <p className="text-sm font-semibold text-gray-700">分析結果</p>
-              <p className="text-xs text-gray-500">詳細レポート</p>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-2" style={{ backgroundColor: iosColors.systemOrange }}>📊</div>
+              <p className="text-sm font-medium">分析結果</p>
+              <p className="text-xs" style={{ color: iosColors.systemGray2 }}>詳細レポート</p>
             </div>
           </div>
             </motion.div>
@@ -307,25 +359,37 @@ export default function DesignerPage() {
               <button
                 onClick={saveSurveyConfig}
                 disabled={isSaving}
-                className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium disabled:opacity-50"
+                className="text-white px-6 py-3 rounded-lg font-medium disabled:opacity-50 transition-all"
+                style={{ 
+                  backgroundColor: iosColors.systemBlue,
+                  opacity: isSaving ? 0.6 : 1
+                }}
               >
-                {isSaving ? '保存中...' : '💾 設定を保存'}
+                {isSaving ? '保存中...' : '設定を保存'}
               </button>
             </div>
 
             {/* ステップ選択 */}
-            <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">編集するステップを選択</h3>
+            <div className="bg-white rounded-2xl p-6 shadow-sm" style={{ 
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+              border: '1px solid rgba(0, 0, 0, 0.04)'
+            }}>
+              <h3 className="text-lg font-semibold mb-4">編集するステップを選択</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {Object.keys(surveyConfig).map((stepKey) => (
                   <button
                     key={stepKey}
                     onClick={() => setSelectedStep(stepKey)}
-                    className={`p-3 rounded-lg border-2 transition-all ${
+                    className={`p-3 rounded-lg border transition-all ${
                       selectedStep === stepKey
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'text-white'
+                        : ''
                     }`}
+                    style={{
+                      backgroundColor: selectedStep === stepKey ? iosColors.systemBlue : iosColors.systemGray6,
+                      color: selectedStep === stepKey ? 'white' : iosColors.systemGray,
+                      borderColor: selectedStep === stepKey ? iosColors.systemBlue : iosColors.systemGray5
+                    }}
                   >
                     {stepKey}
                   </button>
@@ -335,46 +399,60 @@ export default function DesignerPage() {
 
             {/* ステップエディター */}
             {surveyConfig[selectedStep] && (
-              <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-800 mb-6">
-                  ✏️ {selectedStep} を編集
+              <div className="bg-white rounded-2xl p-6 shadow-sm" style={{ 
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                border: '1px solid rgba(0, 0, 0, 0.04)'
+              }}>
+                <h3 className="text-lg font-semibold mb-6">
+                  {selectedStep} を編集
                 </h3>
                 
                 <div className="space-y-6">
                   {/* タイトル編集 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium mb-2" style={{ color: iosColors.systemGray }}>
                       タイトル
                     </label>
                     <input
                       type="text"
                       value={surveyConfig[selectedStep]?.title || ''}
                       onChange={(e) => updateStep(selectedStep, 'title', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 rounded-lg"
+                      style={{
+                        backgroundColor: iosColors.systemGray6,
+                        border: `1px solid ${iosColors.systemGray5}`,
+                        outline: 'none'
+                      }}
                     />
                   </div>
 
                   {/* メッセージ編集 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium mb-2" style={{ color: iosColors.systemGray }}>
                       メッセージ
                     </label>
                     <textarea
                       value={surveyConfig[selectedStep]?.message || ''}
                       onChange={(e) => updateStep(selectedStep, 'message', e.target.value)}
                       rows={4}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 rounded-lg"
+                      style={{
+                        backgroundColor: iosColors.systemGray6,
+                        border: `1px solid ${iosColors.systemGray5}`,
+                        outline: 'none',
+                        resize: 'none'
+                      }}
                     />
                   </div>
 
                   {/* ボタン編集 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium mb-2" style={{ color: iosColors.systemGray }}>
                       ボタン設定
                     </label>
                     <div className="space-y-3">
                       {surveyConfig[selectedStep]?.buttons?.map((button, index) => (
-                        <div key={index} className="flex space-x-3 items-center p-3 bg-gray-50 rounded-lg">
+                        <div key={index} className="flex space-x-3 items-center p-3 rounded-lg" style={{ backgroundColor: iosColors.systemGray6 }}>
                           <input
                             type="text"
                             value={button.label}
@@ -384,7 +462,12 @@ export default function DesignerPage() {
                               updateStep(selectedStep, 'buttons', newButtons)
                             }}
                             placeholder="ボタンラベル"
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            className="flex-1 px-3 py-2 rounded-md text-sm"
+                            style={{
+                              backgroundColor: 'white',
+                              border: `1px solid ${iosColors.systemGray5}`,
+                              outline: 'none'
+                            }}
                           />
                           <input
                             type="text"
@@ -395,7 +478,12 @@ export default function DesignerPage() {
                               updateStep(selectedStep, 'buttons', newButtons)
                             }}
                             placeholder="値"
-                            className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            className="w-24 px-3 py-2 rounded-md text-sm"
+                            style={{
+                              backgroundColor: 'white',
+                              border: `1px solid ${iosColors.systemGray5}`,
+                              outline: 'none'
+                            }}
                           />
                           <input
                             type="text"
@@ -406,7 +494,12 @@ export default function DesignerPage() {
                               updateStep(selectedStep, 'buttons', newButtons)
                             }}
                             placeholder="次のステップ"
-                            className="w-32 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            className="w-32 px-3 py-2 rounded-md text-sm"
+                            style={{
+                              backgroundColor: 'white',
+                              border: `1px solid ${iosColors.systemGray5}`,
+                              outline: 'none'
+                            }}
                           />
                         </div>
                       ))}
@@ -417,22 +510,28 @@ export default function DesignerPage() {
             )}
 
             {/* フローチャート可視化 */}
-            <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">📊 フロー図</h3>
+            <div className="bg-white rounded-2xl p-6 shadow-sm" style={{ 
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+              border: '1px solid rgba(0, 0, 0, 0.04)'
+            }}>
+              <h3 className="text-lg font-semibold mb-4">フロー図</h3>
               <div className="flex flex-wrap gap-4 justify-center">
                 {Object.entries(surveyConfig).map(([stepKey, step], index) => (
                   <motion.div
                     key={stepKey}
-                    className={`p-4 rounded-lg border-2 max-w-xs ${
-                      selectedStep === stepKey ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                    }`}
+                    className={`p-4 rounded-lg border max-w-xs`}
+                    style={{
+                      backgroundColor: selectedStep === stepKey ? iosColors.systemGray6 : 'white',
+                      borderColor: selectedStep === stepKey ? iosColors.systemBlue : iosColors.systemGray5,
+                      borderWidth: selectedStep === stepKey ? '2px' : '1px'
+                    }}
                     onClick={() => setSelectedStep(stepKey)}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <h4 className="font-bold text-sm mb-2">{step.title}</h4>
-                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">{step.message}</p>
-                    <div className="text-xs text-blue-600">
+                    <h4 className="font-semibold text-sm mb-2">{step.title}</h4>
+                    <p className="text-xs mb-2 line-clamp-2" style={{ color: iosColors.systemGray }}>{step.message}</p>
+                    <div className="text-xs" style={{ color: iosColors.systemBlue }}>
                       {step.buttons?.length || 0} ボタン
                     </div>
                   </motion.div>
