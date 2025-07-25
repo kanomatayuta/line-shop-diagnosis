@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 LINE Flow Designer - 管理画面</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+    <link href="/styles/ios-design.css" rel="stylesheet">
+    <style>
+        /* iOS Design System Import */
+        :root {
+            /* iOS 17 Dynamic Colors */
+            --ios-blue: #007AFF;
+            --ios-green: #34C759;
+            --ios-red: #FF3B30;
+            --ios-orange: #FF9500;
+            --ios-yellow: #FFCC00;
+            --ios-purple: #AF52DE;
+            --ios-pink: #FF2D92;
+            --ios-indigo: #5856D6;
+            --ios-teal: #5AC8FA;
+            --ios-mint: #00C7BE;
+            
+            /* System Colors */
+            --system-background: #FFFFFF;
+            --system-background-secondary: #F2F2F7;
+            --system-background-tertiary: #FFFFFF;
+            --system-grouped-background: #F2F2F7;
+            
+            /* Labels */
+            --label-primary: #000000;
+            --label-secondary: #3C3C43;
+            --label-tertiary: rgba(60, 60, 67, 0.6);
+            --label-quaternary: rgba(60, 60, 67, 0.18);
+            
+            /* Fills */
+            --fill-primary: rgba(120, 120, 128, 0.2);
+            --fill-secondary: rgba(120, 120, 128, 0.16);
+            --fill-tertiary: rgba(120, 120, 128, 0.12);
+            --fill-quaternary: rgba(120, 120, 128, 0.08);
+            
+            /* Separators */
+            --separator: rgba(60, 60, 67, 0.29);
+            --separator-opaque: #C6C6C8;
+            
+            /* Spacing */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            
+            /* Radius */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+        }
+        
+        /* Dark Mode */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --system-background: #000000;
+                --system-background-secondary: #1C1C1E;
+                --system-background-tertiary: #2C2C2E;
+                --system-grouped-background: #000000;
+                --label-primary: #FFFFFF;
+                --label-secondary: rgba(235, 235, 245, 0.6);
+                --label-tertiary: rgba(235, 235, 245, 0.3);
+                --separator: rgba(84, 84, 88, 0.65);
+                --separator-opaque: #38383A;
+            }
+        }
+        
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+            background: var(--system-grouped-background);
+            color: var(--label-primary);
+            font-size: 17px;
+            line-height: 1.41176;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Layout */
+        .designer-app {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: var(--system-background);
+            border-right: 1px solid var(--separator);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .sidebar-header {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--separator);
+            background: var(--system-background);
+        }
+        
+        .sidebar-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--label-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--spacing-md);
+        }
+        
+        /* Canvas Area */
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--system-background-secondary);
+        }
+        
+        .canvas-toolbar {
+            background: var(--system-background);
+            border-bottom: 1px solid var(--separator);
+            padding: var(--spacing-sm) var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .toolbar-group {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: center;
+        }
+        
+        #flowCanvas {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+            background: var(--system-background-secondary);
+            background-image: 
+                radial-gradient(circle, var(--fill-quaternary) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-xs);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 36px;
+            white-space: nowrap;
+        }
+        
+        .btn-primary {
+            background: var(--ios-blue);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0051D5;
+            transform: translateY(-1px);
+        }
+        
+        .btn-success {
+            background: var(--ios-green);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: var(--fill-secondary);
+            color: var(--label-primary);
+        }
+        
+        .btn-danger {
+            background: var(--ios-red);
+            color: white;
+        }
+        
+        .btn:active {
+            transform: scale(0.96);
+        }
+        
+        /* Nodes */
+        .flow-node {
+            position: absolute;
+            background: var(--system-background);
+            border: 2px solid var(--separator);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            min-width: 200px;
+            cursor: move;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .flow-node:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .flow-node.selected {
+            border-color: var(--ios-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+        }
+        
+        .node-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .node-icon {
+            font-size: 20px;
+        }
+        
+        .node-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--label-primary);
+        }
+        
+        .node-content {
+            font-size: 14px;
+            color: var(--label-secondary);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .node-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+        
+        .node-button {
+            background: var(--fill-tertiary);
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            font-size: 13px;
+            color: var(--label-primary);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .node-button:hover {
+            background: var(--fill-secondary);
+        }
+        
+        /* Connection Lines */
+        .connection-line {
+            position: absolute;
+            pointer-events: none;
+            stroke: var(--ios-blue);
+            stroke-width: 2;
+            fill: none;
+            opacity: 0.6;
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--label-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-sm);
+            border: 1px solid var(--separator);
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-family: inherit;
+            background: var(--system-background);
+            color: var(--label-primary);
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--ios-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        /* Stats */
+        .stats-container {
+            display: flex;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: var(--system-background);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--ios-blue);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--label-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            background: var(--system-background);
+            border-top: 1px solid var(--separator);
+            padding: var(--spacing-sm) var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: var(--label-secondary);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--ios-green);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 280px;
+            }
+            
+            .flow-node {
+                min-width: 160px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="designer-app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="sidebar-title">
+                    🎨 Flow Designer
+                </h1>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Stats -->
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-value" id="nodeCount">0</div>
+                        <div class="stat-label">Nodes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="connectionCount">0</div>
+                        <div class="stat-label">Connections</div>
+                    </div>
+                </div>
+                
+                <!-- Node Editor -->
+                <div id="nodeEditor">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: var(--spacing-md);">
+                        ノード編集
+                    </h3>
+                    <div style="padding: var(--spacing-xl); text-align: center; color: var(--label-tertiary);">
+                        ノードを選択してください
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div style="margin-top: var(--spacing-lg);">
+                    <button class="btn btn-success" style="width: 100%; margin-bottom: var(--spacing-sm);" onclick="saveFlow()">
+                        💾 フローを保存
+                    </button>
+                    <button class="btn btn-primary" style="width: 100%; margin-bottom: var(--spacing-sm);" onclick="loadFlow()">
+                        📂 フローを読み込み
+                    </button>
+                    <button class="btn btn-danger" style="width: 100%;" onclick="clearFlow()">
+                        🗑️ クリア
+                    </button>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Canvas Area -->
+        <main class="canvas-area">
+            <!-- Toolbar -->
+            <div class="canvas-toolbar">
+                <div class="toolbar-group">
+                    <button class="btn btn-primary" onclick="addNode()">
+                        ➕ ノード追加
+                    </button>
+                    <button class="btn btn-secondary" onclick="autoLayout()">
+                        🎯 自動配置
+                    </button>
+                    <button class="btn btn-secondary" onclick="zoomIn()">
+                        🔍+
+                    </button>
+                    <button class="btn btn-secondary" onclick="zoomOut()">
+                        🔍-
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetView()">
+                        🔄 リセット
+                    </button>
+                </div>
+                
+                <div class="toolbar-group">
+                    <div class="status-indicator">
+                        <div class="status-dot"></div>
+                        <span>ライブエンジン接続中</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Canvas -->
+            <div id="flowCanvas">
+                <!-- Flow nodes will be rendered here -->
+            </div>
+            
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div id="statusMessage">準備完了</div>
+                <div>
+                    <span id="canvasInfo">100% • 0,0</span>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Flow Designer System
+        class FlowDesigner {
+            constructor() {
+                this.nodes = {};
+                this.connections = [];
+                this.selectedNode = null;
+                this.scale = 1;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                this.isDragging = false;
+                this.dragNode = null;
+                this.nodeIdCounter = 0;
+                
+                this.init();
+            }
+            
+            init() {
+                this.canvas = document.getElementById('flowCanvas');
+                this.setupEventListeners();
+                this.loadFromLiveEngine();
+                this.updateStats();
+            }
+            
+            setupEventListeners() {
+                // Canvas drag
+                this.canvas.addEventListener('mousedown', this.onCanvasMouseDown.bind(this));
+                document.addEventListener('mousemove', this.onDocumentMouseMove.bind(this));
+                document.addEventListener('mouseup', this.onDocumentMouseUp.bind(this));
+                
+                // Wheel zoom
+                this.canvas.addEventListener('wheel', this.onCanvasWheel.bind(this));
+            }
+            
+            onCanvasMouseDown(e) {
+                const target = e.target.closest('.flow-node');
+                if (target) {
+                    this.dragNode = target;
+                    this.dragOffset = {
+                        x: e.clientX - target.offsetLeft,
+                        y: e.clientY - target.offsetTop
+                    };
+                    this.selectNode(target.dataset.nodeId);
+                } else {
+                    this.isDragging = true;
+                    this.dragStart = {
+                        x: e.clientX - this.offsetX,
+                        y: e.clientY - this.offsetY
+                    };
+                    this.deselectNode();
+                }
+            }
+            
+            onDocumentMouseMove(e) {
+                if (this.dragNode) {
+                    const x = e.clientX - this.dragOffset.x;
+                    const y = e.clientY - this.dragOffset.y;
+                    this.dragNode.style.left = `${x}px`;
+                    this.dragNode.style.top = `${y}px`;
+                    this.updateConnections();
+                } else if (this.isDragging) {
+                    this.offsetX = e.clientX - this.dragStart.x;
+                    this.offsetY = e.clientY - this.dragStart.y;
+                    this.updateCanvasTransform();
+                }
+            }
+            
+            onDocumentMouseUp() {
+                if (this.dragNode) {
+                    const nodeId = this.dragNode.dataset.nodeId;
+                    this.nodes[nodeId].position = {
+                        x: this.dragNode.offsetLeft,
+                        y: this.dragNode.offsetTop
+                    };
+                }
+                this.dragNode = null;
+                this.isDragging = false;
+            }
+            
+            onCanvasWheel(e) {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                this.scale = Math.max(0.5, Math.min(2, this.scale * delta));
+                this.updateCanvasTransform();
+                this.updateCanvasInfo();
+            }
+            
+            updateCanvasTransform() {
+                this.canvas.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
+            }
+            
+            selectNode(nodeId) {
+                document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected'));
+                const node = document.querySelector(`[data-node-id="${nodeId}"]`);
+                if (node) {
+                    node.classList.add('selected');
+                    this.selectedNode = nodeId;
+                    this.showNodeEditor(nodeId);
+                }
+            }
+            
+            deselectNode() {
+                document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected'));
+                this.selectedNode = null;
+                this.showEmptyEditor();
+            }
+            
+            showNodeEditor(nodeId) {
+                const node = this.nodes[nodeId];
+                if (!node) return;
+                
+                const editor = document.getElementById('nodeEditor');
+                editor.innerHTML = `
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: var(--spacing-md);">
+                        ノード編集
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label">タイトル</label>
+                        <input type="text" class="form-input" value="${node.title || ''}" 
+                               onchange="designer.updateNode('${nodeId}', 'title', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">メッセージ</label>
+                        <textarea class="form-textarea" 
+                                  onchange="designer.updateNode('${nodeId}', 'message', this.value)">${node.message || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">タイプ</label>
+                        <select class="form-input" onchange="designer.updateNode('${nodeId}', 'type', this.value)">
+                            <option value="entry" ${node.type === 'entry' ? 'selected' : ''}>エントリー</option>
+                            <option value="selection" ${node.type === 'selection' ? 'selected' : ''}>選択</option>
+                            <option value="questionnaire" ${node.type === 'questionnaire' ? 'selected' : ''}>質問</option>
+                            <option value="result" ${node.type === 'result' ? 'selected' : ''}>結果</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-danger" style="width: 100%;" onclick="designer.deleteNode('${nodeId}')">
+                        🗑️ このノードを削除
+                    </button>
+                `;
+            }
+            
+            showEmptyEditor() {
+                const editor = document.getElementById('nodeEditor');
+                editor.innerHTML = `
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: var(--spacing-md);">
+                        ノード編集
+                    </h3>
+                    <div style="padding: var(--spacing-xl); text-align: center; color: var(--label-tertiary);">
+                        ノードを選択してください
+                    </div>
+                `;
+            }
+            
+            updateNode(nodeId, property, value) {
+                if (this.nodes[nodeId]) {
+                    this.nodes[nodeId][property] = value;
+                    this.renderNode(nodeId);
+                    this.showStatus('ノードを更新しました');
+                }
+            }
+            
+            deleteNode(nodeId) {
+                if (confirm('このノードを削除しますか？')) {
+                    delete this.nodes[nodeId];
+                    const nodeEl = document.querySelector(`[data-node-id="${nodeId}"]`);
+                    if (nodeEl) nodeEl.remove();
+                    this.deselectNode();
+                    this.updateStats();
+                    this.showStatus('ノードを削除しました');
+                }
+            }
+            
+            addNode() {
+                const nodeId = `node_${++this.nodeIdCounter}`;
+                const node = {
+                    id: nodeId,
+                    type: 'selection',
+                    title: '新しいノード',
+                    message: 'ノードの説明を入力してください',
+                    position: {
+                        x: (this.canvas.scrollWidth / 2 - this.offsetX) / this.scale - 100,
+                        y: (this.canvas.scrollHeight / 2 - this.offsetY) / this.scale - 50
+                    },
+                    buttons: []
+                };
+                
+                this.nodes[nodeId] = node;
+                this.renderNode(nodeId);
+                this.selectNode(nodeId);
+                this.updateStats();
+                this.showStatus('ノードを追加しました');
+            }
+            
+            renderNode(nodeId) {
+                const node = this.nodes[nodeId];
+                let nodeEl = document.querySelector(`[data-node-id="${nodeId}"]`);
+                
+                if (!nodeEl) {
+                    nodeEl = document.createElement('div');
+                    nodeEl.className = 'flow-node';
+                    nodeEl.dataset.nodeId = nodeId;
+                    this.canvas.appendChild(nodeEl);
+                }
+                
+                const icon = this.getNodeIcon(node.type);
+                
+                nodeEl.innerHTML = `
+                    <div class="node-header">
+                        <span class="node-icon">${icon}</span>
+                        <div class="node-title">${node.title || 'Untitled'}</div>
+                    </div>
+                    <div class="node-content">${node.message || ''}</div>
+                    ${node.buttons && node.buttons.length > 0 ? `
+                        <div class="node-buttons">
+                            ${node.buttons.map(btn => `
+                                <button class="node-button">${btn.label}</button>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                `;
+                
+                nodeEl.style.left = `${node.position.x}px`;
+                nodeEl.style.top = `${node.position.y}px`;
+            }
+            
+            getNodeIcon(type) {
+                const icons = {
+                    entry: '🚀',
+                    selection: '📋',
+                    questionnaire: '❓',
+                    result: '🎯'
+                };
+                return icons[type] || '📦';
+            }
+            
+            updateConnections() {
+                // TODO: Implement connection rendering
+            }
+            
+            updateStats() {
+                document.getElementById('nodeCount').textContent = Object.keys(this.nodes).length;
+                document.getElementById('connectionCount').textContent = this.connections.length;
+            }
+            
+            updateCanvasInfo() {
+                const info = `${Math.round(this.scale * 100)}% • ${Math.round(this.offsetX)},${Math.round(this.offsetY)}`;
+                document.getElementById('canvasInfo').textContent = info;
+            }
+            
+            showStatus(message, type = 'info') {
+                const statusEl = document.getElementById('statusMessage');
+                statusEl.textContent = message;
+                
+                setTimeout(() => {
+                    statusEl.textContent = '準備完了';
+                }, 3000);
+            }
+            
+            // Live Engine Integration
+            async loadFromLiveEngine() {
+                try {
+                    const response = await fetch('/api/live-engine');
+                    const data = await response.json();
+                    
+                    if (data.success && data.flows?.flows?.professional_diagnosis?.nodes) {
+                        const nodes = data.flows.flows.professional_diagnosis.nodes;
+                        
+                        // Convert to designer format
+                        for (const [nodeId, nodeData] of Object.entries(nodes)) {
+                            this.nodes[nodeId] = {
+                                ...nodeData,
+                                position: nodeData.position || { x: 100, y: 100 }
+                            };
+                            this.renderNode(nodeId);
+                        }
+                        
+                        this.updateStats();
+                        this.showStatus('ライブエンジンから読み込みました');
+                    }
+                } catch (error) {
+                    console.error('Failed to load from live engine:', error);
+                    this.showStatus('ライブエンジン接続エラー', 'error');
+                }
+            }
+            
+            async saveToLiveEngine() {
+                try {
+                    const flowData = {
+                        flowId: 'professional_diagnosis',
+                        nodes: this.nodes
+                    };
+                    
+                    const response = await fetch('/api/live-engine', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(flowData)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showStatus('ライブエンジンに保存しました');
+                    } else {
+                        throw new Error(result.error || 'Save failed');
+                    }
+                } catch (error) {
+                    console.error('Failed to save to live engine:', error);
+                    this.showStatus('保存エラー', 'error');
+                }
+            }
+        }
+        
+        // Global instance
+        let designer;
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            designer = new FlowDesigner();
+        });
+        
+        // Global functions
+        function addNode() {
+            designer.addNode();
+        }
+        
+        function autoLayout() {
+            // TODO: Implement auto layout
+            designer.showStatus('自動配置機能は開発中です');
+        }
+        
+        function zoomIn() {
+            designer.scale = Math.min(2, designer.scale * 1.2);
+            designer.updateCanvasTransform();
+            designer.updateCanvasInfo();
+        }
+        
+        function zoomOut() {
+            designer.scale = Math.max(0.5, designer.scale * 0.8);
+            designer.updateCanvasTransform();
+            designer.updateCanvasInfo();
+        }
+        
+        function resetView() {
+            designer.scale = 1;
+            designer.offsetX = 0;
+            designer.offsetY = 0;
+            designer.updateCanvasTransform();
+            designer.updateCanvasInfo();
+        }
+        
+        function saveFlow() {
+            designer.saveToLiveEngine();
+        }
+        
+        function loadFlow() {
+            designer.loadFromLiveEngine();
+        }
+        
+        function clearFlow() {
+            if (confirm('すべてのノードをクリアしますか？')) {
+                designer.nodes = {};
+                designer.connections = [];
+                designer.canvas.innerHTML = '';
+                designer.updateStats();
+                designer.showStatus('フローをクリアしました');
+            }
+        }
+    </script>
+</body>
+</html>
