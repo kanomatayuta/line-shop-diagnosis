@@ -33,57 +33,65 @@ if (LINE_CONFIG.channelAccessToken && LINE_CONFIG.channelSecret) {
   console.error('🚨 Missing LINE credentials!')
 }
 
-// 限界を越えた超高速アンケートフロー
-const ULTIMATE_SURVEY = {
+// ステップ形式のアンケートシステム
+const STEP_BY_STEP_SURVEY = {
   welcome: {
     title: "🎉 無料診断スタート",
-    message: "友だち登録ありがとうございます！🎊\n\n🎯 あなたの可能性を無料で診断します\n✨ 簡単3分で完了\n📊 詳細な分析結果をお届け\n\n今すぐ開始しましょう！",
+    message: "友だち登録ありがとうございます！🎊\n\n📋 3つのステップで診断を行います\n⏱️ 所要時間：約3分\n📊 詳細な分析結果をお届け\n\n今すぐ開始しましょう！",
     buttons: [
-      { label: "🚀 無料診断開始", action: "start", next: "category" }
+      { label: "🚀 ステップ1へ進む", action: "start", next: "step1" }
     ]
   },
-  category: {
-    title: "📋 究極の選択",
-    message: "あなたが求める診断は？\n\n✨ 限界を越えた分析をお届けします",
+  
+  step1: {
+    title: "📋 ステップ1／3：基本情報",
+    message: "まず、あなたの現在の状況について教えてください。\n\n💼 どちらに最も当てはまりますか？",
     buttons: [
-      { label: "💼 ビジネス戦略", action: "select", value: "business", next: "business" },
-      { label: "🎯 キャリア設計", action: "select", value: "career", next: "career" },
-      { label: "🚀 スキル強化", action: "select", value: "skills", next: "skills" }
+      { label: "👔 会社員・公務員", action: "step1", value: "employee", next: "step2" },
+      { label: "💼 経営者・役員", action: "step1", value: "executive", next: "step2" },
+      { label: "🎓 学生", action: "step1", value: "student", next: "step2" },
+      { label: "🏠 フリーランス・個人事業主", action: "step1", value: "freelancer", next: "step2" }
     ]
   },
-  business: {
-    title: "💼 ビジネス戦略診断",
-    message: "あなたのビジネスの立地は？\n\n🔥 最適戦略を分析します",
+  
+  step2: {
+    title: "🎯 ステップ2／3：目標設定",
+    message: "次に、あなたの今後の目標について教えてください。\n\n🚀 最も重視したい分野は？",
     buttons: [
-      { label: "🌆 都市部", action: "area", value: "urban", next: "result" },
-      { label: "🏘️ 郊外", action: "area", value: "suburban", next: "result" },
-      { label: "🌄 地方", action: "area", value: "rural", next: "result" }
+      { label: "💰 収入アップ", action: "step2", value: "income", next: "step3" },
+      { label: "📈 スキル向上", action: "step2", value: "skills", next: "step3" },
+      { label: "🏢 キャリアアップ", action: "step2", value: "career", next: "step3" },
+      { label: "⚖️ ワークライフバランス", action: "step2", value: "balance", next: "step3" },
+      { label: "🌟 自己実現", action: "step2", value: "self_actualization", next: "step3" }
     ]
   },
-  career: {
-    title: "🎯 キャリア設計診断",
-    message: "あなたの理想のキャリアは？\n\n✨ 成功への道筋を示します",
+  
+  step3: {
+    title: "⚡ ステップ3／3：行動スタイル",
+    message: "最後に、あなたの行動スタイルについて教えてください。\n\n🤔 新しいことに取り組む時、どのタイプですか？",
     buttons: [
-      { label: "📈 経営層", action: "goal", value: "executive", next: "result" },
-      { label: "🔬 専門家", action: "goal", value: "expert", next: "result" },
-      { label: "🚀 起業家", action: "goal", value: "entrepreneur", next: "result" }
+      { label: "🔥 すぐに行動開始", action: "step3", value: "action_first", next: "analysis" },
+      { label: "📚 しっかり計画してから", action: "step3", value: "plan_first", next: "analysis" },
+      { label: "👥 人と相談してから", action: "step3", value: "consult_first", next: "analysis" },
+      { label: "📊 データを集めてから", action: "step3", value: "research_first", next: "analysis" }
     ]
   },
-  skills: {
-    title: "🚀 スキル強化診断",
-    message: "伸ばしたいスキルは？\n\n💪 最強の成長戦略を提供します",
+  
+  analysis: {
+    title: "🔄 分析中...",
+    message: "📊 あなたの回答を分析しています\n\n✨ ステップ1：基本情報 ✅\n🎯 ステップ2：目標設定 ✅\n⚡ ステップ3：行動スタイル ✅\n\n🔥 AIが最適なアドバイスを準備中...",
     buttons: [
-      { label: "💻 テクノロジー", action: "skill", value: "tech", next: "result" },
-      { label: "🤝 リーダーシップ", action: "skill", value: "leadership", next: "result" },
-      { label: "📊 戦略思考", action: "skill", value: "strategy", next: "result" }
+      { label: "📋 診断結果を見る", action: "get_result", next: "result" }
     ]
   },
+  
   result: {
-    title: "🎉 診断完了！",
-    message: "🔥 限界を越えた分析が完了しました！\n\n✨ あなたの可能性は無限大です\n\n📈 成功への第一歩を踏み出しましょう",
+    title: "🎉 診断結果完了！",
+    message: "🔥 あなたの診断が完了しました！\n\n✨ あなたの可能性は無限大です\n📈 成功への具体的なステップをお伝えします\n\n💎 パーソナライズされた結果をご確認ください",
     buttons: [
-      { label: "📊 詳細レポート", action: "report", value: "detail" },
-      { label: "🔄 再診断", action: "restart", next: "welcome" }
+      { label: "📊 詳細レポートを見る", action: "report", value: "detail" },
+      { label: "🔄 もう一度診断する", action: "restart", next: "welcome" },
+      { label: "💬 個別相談を申し込む", action: "consultation", value: "request" }
     ]
   }
 }
@@ -188,13 +196,13 @@ async function handleUltimateMessage(event: MessageEvent): Promise<Message> {
     
     console.log(`🚀 ULTIMATE START for ${userId} with trigger: ${text}`)
     userSessions.set(userId, { currentStep: 'welcome', data: {} })
-    return createUltimateFlexMessage(ULTIMATE_SURVEY.welcome)
+    return createUltimateFlexMessage(STEP_BY_STEP_SURVEY.welcome)
   }
 
   // 現在の状態を確認
   const session = userSessions.get(userId)
-  if (session?.currentStep && ULTIMATE_SURVEY[session.currentStep as keyof typeof ULTIMATE_SURVEY]) {
-    return createUltimateFlexMessage(ULTIMATE_SURVEY[session.currentStep as keyof typeof ULTIMATE_SURVEY])
+  if (session?.currentStep && STEP_BY_STEP_SURVEY[session.currentStep as keyof typeof STEP_BY_STEP_SURVEY]) {
+    return createUltimateFlexMessage(STEP_BY_STEP_SURVEY[session.currentStep as keyof typeof STEP_BY_STEP_SURVEY])
   }
 
   // デフォルト
@@ -214,28 +222,44 @@ async function handleUltimatePostback(event: PostbackEvent): Promise<Message> {
     const data = JSON.parse(event.postback.data)
     const { action, value, next } = data
 
-    // 次のステップに進む
-    if (next && ULTIMATE_SURVEY[next as keyof typeof ULTIMATE_SURVEY]) {
+    // 回答データを保存して次のステップに進む
+    if (next && STEP_BY_STEP_SURVEY[next as keyof typeof STEP_BY_STEP_SURVEY]) {
       console.log(`➡️ ULTIMATE MOVE to: ${next}`)
-      userSessions.set(userId, { currentStep: next, data: { ...data } })
-      return createUltimateFlexMessage(ULTIMATE_SURVEY[next as keyof typeof ULTIMATE_SURVEY])
+      
+      // 現在のセッションデータを取得
+      const currentSession = userSessions.get(userId) || { currentStep: '', data: {} }
+      
+      // 回答データを保存
+      const updatedData = { ...currentSession.data }
+      if (action && value) {
+        updatedData[action] = value
+      }
+      
+      userSessions.set(userId, { currentStep: next, data: updatedData })
+      return createUltimateFlexMessage(STEP_BY_STEP_SURVEY[next as keyof typeof STEP_BY_STEP_SURVEY])
     }
 
     // 特別なアクション
     switch (action) {
       case 'restart':
         userSessions.set(userId, { currentStep: 'welcome', data: {} })
-        return createUltimateFlexMessage(ULTIMATE_SURVEY.welcome)
+        return createUltimateFlexMessage(STEP_BY_STEP_SURVEY.welcome)
       
       case 'report':
         return {
           type: 'text',
-          text: `🎉 無料診断レポート準備中！\n\n✨ あなたの分析結果：\n📊 データ処理中...\n🚀 成功への道筋を計算中...\n\n💪 素晴らしい可能性を発見しました！\n\n🎁 詳細レポートは無料でお届け中\n\n🔄 再診断は「無料診断」で！`
+          text: `📊 詳細レポート準備中！\n\n✨ あなたの診断結果：\n📋 ステップ1: ${userSessions.get(userId)?.data?.step1 || '未回答'}\n🎯 ステップ2: ${userSessions.get(userId)?.data?.step2 || '未回答'}\n⚡ ステップ3: ${userSessions.get(userId)?.data?.step3 || '未回答'}\n\n🔥 AIが分析した結果をお届け中...\n💎 あなた専用のアドバイスを準備中\n\n🔄 再診断は「スタート」で！`
+        }
+      
+      case 'consultation':
+        return {
+          type: 'text',
+          text: `💬 個別相談お申し込みありがとうございます！\n\n📋 診断結果を基に、専門スタッフが\n🎯 あなたに最適なプランをご提案します\n\n📞 近日中にご連絡させていただきます\n\n✨ より詳しい分析をお待ちください！`
         }
       
       case 'start':
-        userSessions.set(userId, { currentStep: 'category', data: {} })
-        return createUltimateFlexMessage(ULTIMATE_SURVEY.category)
+        userSessions.set(userId, { currentStep: 'step1', data: {} })
+        return createUltimateFlexMessage(STEP_BY_STEP_SURVEY.step1)
       
       default:
         return {
@@ -302,7 +326,7 @@ export async function POST(request: NextRequest) {
           console.log('👋 ULTIMATE FOLLOW EVENT - AUTO SURVEY!')
           const userId = event.source.userId!
           userSessions.set(userId, { currentStep: 'welcome', data: {} })
-          ultimateMessage = createUltimateFlexMessage(ULTIMATE_SURVEY.welcome)
+          ultimateMessage = createUltimateFlexMessage(STEP_BY_STEP_SURVEY.welcome)
           break
           
         default:
