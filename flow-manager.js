@@ -16,7 +16,7 @@ class FlowManager {
     
     async loadFlowConfig() {
         try {
-            const response = await fetch('./flow-config.json');
+            const response = await fetch('/api/flow-config');
             this.flowConfig = await response.json();
             this.renderFlow();
             this.updateStatus('フロー設定を読み込みました');

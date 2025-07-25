@@ -11,28 +11,14 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
+  console.log('Admin API - Method:', req.method, 'URL:', req.url);
+
   try {
     if (req.method === 'GET') {
-      // Serve admin interface
-      if (req.url === '/api/admin' || req.url === '/api/admin/') {
-        const adminHtml = fs.readFileSync(path.join(__dirname, '..', 'admin.html'), 'utf8');
-        res.setHeader('Content-Type', 'text/html');
-        return res.status(200).send(adminHtml);
-      }
-      
-      // Serve flow manager JS
-      if (req.url === '/api/admin/flow-manager.js') {
-        const flowManagerJs = fs.readFileSync(path.join(__dirname, '..', 'flow-manager.js'), 'utf8');
-        res.setHeader('Content-Type', 'application/javascript');
-        return res.status(200).send(flowManagerJs);
-      }
-      
-      // Serve flow config
-      if (req.url === '/api/admin/flow-config.json') {
-        const flowConfig = fs.readFileSync(path.join(__dirname, '..', 'flow-config.json'), 'utf8');
-        res.setHeader('Content-Type', 'application/json');
-        return res.status(200).send(flowConfig);
-      }
+      // Always serve admin interface for GET requests to /api/admin
+      const adminHtml = fs.readFileSync(path.join(__dirname, '..', 'admin.html'), 'utf8');
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(200).send(adminHtml);
     }
 
     if (req.method === 'POST') {
