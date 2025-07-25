@@ -204,18 +204,32 @@ class FlowManager {
     }
     
     selectNode(nodeId) {
-        // Remove previous selection
+        // Remove previous selection with animation
         const prevSelected = this.canvas.querySelector('.node.selected');
         if (prevSelected) {
             prevSelected.classList.remove('selected');
+            prevSelected.style.transform = prevSelected.style.transform.replace('scale(1.02)', 'scale(1)');
         }
         
-        // Select new node
+        // Select new node with iOS-style animation
         const nodeEl = this.canvas.querySelector(`[data-id="${nodeId}"]`);
         if (nodeEl) {
             nodeEl.classList.add('selected');
             this.selectedNode = nodeId;
+            
+            // Add selection animation
+            nodeEl.style.transition = 'all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            requestAnimationFrame(() => {
+                nodeEl.style.transform = nodeEl.style.transform + ' scale(1.02)';
+            });
+            
             this.showNodeEditor(nodeId);
+            
+            // Haptic feedback simulation (visual pulse)
+            nodeEl.style.boxShadow = '0 0 0 6px rgba(0, 122, 255, 0.3), var(--ios-shadow-lg)';
+            setTimeout(() => {
+                nodeEl.style.boxShadow = '0 0 0 3px rgba(0, 122, 255, 0.2), var(--ios-shadow-lg)';
+            }, 200);
         }
     }
     
@@ -270,9 +284,24 @@ class FlowManager {
     updateNodeProperty(property, value) {
         if (!this.selectedNode) return;
         
-        this.flowConfig.flowConfig[this.selectedNode][property] = value;
-        this.renderFlow();
-        this.updateStatus(`${property}を更新しました`);
+        // Add loading state
+        const editor = document.getElementById('nodeEditor');
+        editor.classList.add('loading');
+        
+        setTimeout(() => {
+            this.flowConfig.flowConfig[this.selectedNode][property] = value;
+            this.renderFlow();
+            
+            // Remove loading and add success state
+            editor.classList.remove('loading');
+            editor.classList.add('success');
+            
+            setTimeout(() => {
+                editor.classList.remove('success');
+            }, 1000);
+            
+            this.updateStatus(`${property}を更新しました`);
+        }, 200);
     }
     
     updateButtonProperty(buttonIndex, property, value) {
@@ -317,12 +346,28 @@ class FlowManager {
     
     updateStatus(message, type = 'info') {
         const statusEl = document.getElementById('statusMessage');
-        statusEl.textContent = message;
-        statusEl.style.color = type === 'error' ? '#ff6b6b' : 'white';
+        
+        // iOS-style status animation
+        statusEl.style.opacity = '0';
+        statusEl.style.transform = 'translateY(10px)';
         
         setTimeout(() => {
-            statusEl.textContent = '準備完了';
-            statusEl.style.color = 'white';
+            statusEl.textContent = message;
+            statusEl.style.color = type === 'error' ? 'var(--ios-red)' : 'white';
+            statusEl.style.opacity = '1';
+            statusEl.style.transform = 'translateY(0)';
+            statusEl.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        }, 150);
+        
+        setTimeout(() => {
+            statusEl.style.opacity = '0';
+            statusEl.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                statusEl.textContent = '準備完了';
+                statusEl.style.color = 'white';
+                statusEl.style.opacity = '1';
+                statusEl.style.transform = 'translateY(0)';
+            }, 300);
         }, 3000);
     }
     
@@ -381,24 +426,45 @@ function deleteNode() {
 
 function saveFlow() {
     if (!flowManager.flowConfig) {
-        alert('保存するフローがありません');
+        flowManager.updateStatus('保存するフローがありません', 'error');
         return;
     }
     
-    // Update metadata
-    flowManager.flowConfig.metadata.lastUpdated = new Date().toISOString().split('T')[0];
+    // Add saving animation to save button
+    const saveBtn = event.target;
+    const originalText = saveBtn.textContent;
+    saveBtn.textContent = '💾 保存中...';
+    saveBtn.disabled = true;
+    saveBtn.style.opacity = '0.6';
     
-    const dataStr = JSON.stringify(flowManager.flowConfig, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'flow-config.json';
-    link.click();
-    
-    URL.revokeObjectURL(url);
-    flowManager.updateStatus('フロー設定を保存しました');
+    setTimeout(() => {
+        // Update metadata
+        flowManager.flowConfig.metadata.lastUpdated = new Date().toISOString().split('T')[0];
+        
+        const dataStr = JSON.stringify(flowManager.flowConfig, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'flow-config.json';
+        link.click();
+        
+        URL.revokeObjectURL(url);
+        
+        // Success animation
+        saveBtn.textContent = '✅ 保存完了';
+        saveBtn.style.backgroundColor = 'var(--ios-green)';
+        
+        setTimeout(() => {
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+            saveBtn.style.opacity = '1';
+            saveBtn.style.backgroundColor = '';
+        }, 1500);
+        
+        flowManager.updateStatus('フロー設定を保存しました');
+    }, 500);
 }
 
 function exportFlow() {
