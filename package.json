@@ -1,21 +1,33 @@
 {
   "name": "line-flow-designer-pro",
-  "version": "2.0.0",
-  "description": "🚀 LINE Flow Designer Pro - iOS Design Kit",
-  "main": "api/index.js",
+  "version": "3.0.0",
+  "description": "🚀 LINE Flow Designer Pro - Next.js Edition",
+  "private": true,
   "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'Static build ready'",
-    "start": "vercel dev"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
-  "keywords": ["line", "bot", "flow", "designer", "ios", "vercel"],
-  "author": "LINE Flow Team",
-  "license": "MIT",
   "dependencies": {
     "@line/bot-sdk": "^8.0.0",
-    "express": "^4.18.2"
+    "next": "14.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zustand": "^4.4.7",
+    "framer-motion": "^10.16.16",
+    "react-flow-renderer": "^10.3.17",
+    "lucide-react": "^0.303.0"
   },
-  "engines": {
-    "node": ">=18.0.0"
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.0.4",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.3"
   }
 }

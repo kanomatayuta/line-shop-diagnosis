@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* iOS Design System Base Styles */
+@layer base {
+  html {
+    @apply font-ios;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  body {
+    @apply bg-ios-gray-50 text-gray-900;
+    @apply dark:bg-black dark:text-white;
+    @apply transition-colors duration-200;
+  }
+  
+  /* Dark mode support */
+  .dark {
+    color-scheme: dark;
+  }
+}
+
+@layer components {
+  /* iOS Button Styles */
+  .btn-ios {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply px-4 py-2 rounded-ios-sm;
+    @apply font-semibold text-ios-body;
+    @apply transition-all duration-200 ease-out;
+    @apply focus:outline-none focus:ring-4 focus:ring-ios-blue/30;
+    @apply active:scale-95;
+    min-height: 44px;
+  }
+  
+  .btn-primary {
+    @apply btn-ios bg-ios-blue text-white;
+    @apply hover:bg-ios-blue-dark hover:shadow-ios-md;
+    @apply hover:-translate-y-0.5;
+  }
+  
+  .btn-secondary {
+    @apply btn-ios bg-ios-gray-100 text-gray-900;
+    @apply hover:bg-ios-gray-200;
+    @apply dark:bg-ios-gray-800 dark:text-white;
+    @apply dark:hover:bg-ios-gray-700;
+  }
+  
+  .btn-success {
+    @apply btn-ios bg-ios-green text-white;
+    @apply hover:bg-green-600 hover:shadow-ios-md;
+    @apply hover:-translate-y-0.5;
+  }
+  
+  .btn-danger {
+    @apply btn-ios bg-ios-red text-white;
+    @apply hover:bg-red-600 hover:shadow-ios-md;
+    @apply hover:-translate-y-0.5;
+  }
+  
+  /* iOS Card Styles */
+  .card-ios {
+    @apply bg-white rounded-ios-lg;
+    @apply border border-gray-200 shadow-ios-sm;
+    @apply dark:bg-ios-gray-900 dark:border-ios-gray-700;
+    @apply transition-all duration-200;
+  }
+  
+  .card-ios:hover {
+    @apply shadow-ios-md -translate-y-1;
+  }
+  
+  /* iOS Form Styles */
+  .input-ios {
+    @apply w-full px-4 py-3 rounded-ios-sm;
+    @apply border border-gray-300 bg-white;
+    @apply text-ios-body placeholder-gray-500;
+    @apply focus:outline-none focus:ring-4 focus:ring-ios-blue/30;
+    @apply focus:border-ios-blue;
+    @apply transition-all duration-200;
+    @apply dark:bg-ios-gray-800 dark:border-ios-gray-600;
+    @apply dark:text-white dark:placeholder-gray-400;
+  }
+  
+  .textarea-ios {
+    @apply input-ios resize-none;
+    min-height: 80px;
+  }
+  
+  /* Status Indicators */
+  .status-online {
+    @apply inline-flex items-center gap-2;
+    @apply px-3 py-1 rounded-full;
+    @apply bg-green-100 text-green-800;
+    @apply dark:bg-green-900/30 dark:text-green-400;
+    @apply text-xs font-semibold uppercase tracking-wide;
+  }
+  
+  .status-dot {
+    @apply w-2 h-2 rounded-full bg-current;
+    @apply animate-pulse-slow;
+  }
+  
+  /* Navigation Styles */
+  .nav-ios {
+    @apply bg-white/80 backdrop-blur-xl;
+    @apply border-b border-gray-200/80;
+    @apply dark:bg-ios-gray-950/80 dark:border-ios-gray-800/80;
+    @apply sticky top-0 z-50;
+  }
+  
+  /* Flow Node Styles */
+  .flow-node {
+    @apply bg-white rounded-ios-md border-2 border-gray-200;
+    @apply shadow-ios-md cursor-move;
+    @apply hover:shadow-ios-lg hover:-translate-y-1;
+    @apply dark:bg-ios-gray-900 dark:border-ios-gray-700;
+    @apply transition-all duration-200;
+    min-width: 200px;
+  }
+  
+  .flow-node.selected {
+    @apply border-ios-blue ring-4 ring-ios-blue/20;
+  }
+  
+  .flow-node-entry {
+    @apply border-ios-green;
+  }
+  
+  .flow-node-selection {
+    @apply border-ios-blue;
+  }
+  
+  .flow-node-questionnaire {
+    @apply border-ios-orange;
+  }
+  
+  .flow-node-result {
+    @apply border-ios-purple;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .glass {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+}
