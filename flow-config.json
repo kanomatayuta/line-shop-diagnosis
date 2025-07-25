@@ -12,7 +12,7 @@
           "next": "area"
         }
       ],
-      "position": { "x": 100, "y": 100 }
+      "position": { "x": 200, "y": 50 }
     },
     "area": {
       "id": "area",
@@ -52,7 +52,7 @@
           "next": "other_result"
         }
       ],
-      "position": { "x": 100, "y": 250 }
+      "position": { "x": 200, "y": 200 }
     },
     "business_status": {
       "id": "business_status",
@@ -74,7 +74,7 @@
           "next": "floor"
         }
       ],
-      "position": { "x": 100, "y": 400 }
+      "position": { "x": 200, "y": 350 }
     },
     "profit": {
       "id": "profit",
@@ -102,7 +102,7 @@
           "next": "profitable_result"
         }
       ],
-      "position": { "x": 50, "y": 550 }
+      "position": { "x": 50, "y": 500 }
     },
     "floor": {
       "id": "floor",
@@ -124,7 +124,7 @@
           "next": "commercial"
         }
       ],
-      "position": { "x": 250, "y": 550 }
+      "position": { "x": 350, "y": 500 }
     },
     "commercial": {
       "id": "commercial",
@@ -146,7 +146,7 @@
           "next": "assets"
         }
       ],
-      "position": { "x": 400, "y": 700 }
+      "position": { "x": 500, "y": 650 }
     },
     "assets": {
       "id": "assets",
@@ -174,7 +174,7 @@
           "next": "low_value_result"
         }
       ],
-      "position": { "x": 550, "y": 850 }
+      "position": { "x": 650, "y": 800 }
     },
     "employees": {
       "id": "employees",
@@ -196,7 +196,7 @@
           "next": "low_value_result"
         }
       ],
-      "position": { "x": 700, "y": 1000 }
+      "position": { "x": 800, "y": 950 }
     },
     "profitable_result": {
       "id": "profitable_result",
@@ -209,7 +209,7 @@
         "high": 2000
       },
       "consultationUrl": "https://timerex.net/s/rendan/bae2d85d",
-      "position": { "x": 100, "y": 1150 }
+      "position": { "x": 200, "y": 1100 }
     },
     "low_value_result": {
       "id": "low_value_result",
@@ -217,7 +217,7 @@
       "title": "低価値結果",
       "message": "🙏ご回答ありがとうございます！\n売却可能額 300万円以上\n※簡易推計です。無料相談をご希望ですか？",
       "consultationUrl": "https://timerex.net/s/rendan/bae2d85d",
-      "position": { "x": 400, "y": 1150 }
+      "position": { "x": 600, "y": 1100 }
     },
     "other_result": {
       "id": "other_result",
@@ -225,7 +225,7 @@
       "title": "その他エリア結果",
       "message": "🙏アンケートのご回答ありがとうございます！\n申し訳ありませんが、店舗の所在地の関係で店舗売却の可能性が低い結果となりました。\n無料相談をご希望ですか？",
       "consultationUrl": "https://timerex.net/s/rendan/38dfc57a",
-      "position": { "x": 700, "y": 400 }
+      "position": { "x": 600, "y": 350 }
     }
   },
   "metadata": {

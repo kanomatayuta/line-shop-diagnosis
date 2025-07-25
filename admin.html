@@ -155,12 +155,13 @@
             border: 1px solid var(--ios-gray-4);
             border-radius: var(--ios-radius-lg);
             padding: var(--ios-spacing-md);
-            min-width: 220px;
-            max-width: 320px;
+            width: 280px;
+            min-height: 120px;
             box-shadow: var(--ios-shadow-md);
             cursor: pointer;
             transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             backdrop-filter: blur(20px);
+            overflow: hidden;
         }
         
         .node:hover {
@@ -534,8 +535,9 @@
             
             <div class="canvas-container">
                 <div class="toolbar">
-                    <button class="btn btn-primary" onclick="addNode()">➕ ノード追加</button>
+                    <button class="btn btn-primary" onclick="addNode()">➕ 追加</button>
                     <button class="btn btn-danger" onclick="deleteNode()">🗑️ 削除</button>
+                    <button class="btn btn-primary" onclick="fitToScreen()">📐 全体表示</button>
                 </div>
                 
                 <div class="zoom-controls">

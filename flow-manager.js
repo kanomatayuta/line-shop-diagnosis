@@ -88,13 +88,20 @@ class FlowManager {
         const existingNodes = this.canvas.querySelectorAll('.node');
         existingNodes.forEach(node => node.remove());
         
-        // Render nodes
+        // Render nodes with improved positioning
         Object.values(this.flowConfig.flowConfig).forEach(node => {
             this.createNodeElement(node);
         });
         
-        this.drawConnections();
+        // Wait for DOM update before drawing connections
+        setTimeout(() => {
+            this.drawConnections();
+        }, 100);
+        
         this.updateNodeCount();
+        
+        // Auto-fit canvas to show all nodes
+        this.autoFitCanvas();
     }
     
     createNodeElement(nodeData) {
@@ -104,22 +111,30 @@ class FlowManager {
         nodeEl.dataset.x = nodeData.position.x;
         nodeEl.dataset.y = nodeData.position.y;
         
-        const stepText = nodeData.stepNumber ? `Step ${nodeData.stepNumber}` : nodeData.type;
+        const stepText = nodeData.stepNumber ? `Step ${nodeData.stepNumber}` : this.getTypeDisplayName(nodeData.type);
         
         nodeEl.innerHTML = `
             <div class="node-header">${this.getTypeIcon(nodeData.type)} ${stepText}</div>
             <div class="node-title">${nodeData.title}</div>
-            <div class="node-content">${this.truncateText(nodeData.message, 100)}</div>
+            <div class="node-content">${this.truncateText(nodeData.message, 80)}</div>
             ${this.renderNodeButtons(nodeData.buttons)}
         `;
         
-        nodeEl.style.transform = `translate(${nodeData.position.x * this.scale + this.translateX}px, ${nodeData.position.y * this.scale + this.translateY}px) scale(${this.scale})`;
+        // Improved positioning with proper scaling
+        const x = nodeData.position.x * this.scale + this.translateX;
+        const y = nodeData.position.y * this.scale + this.translateY;
+        const scale = this.scale;
+        
+        nodeEl.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+        nodeEl.style.transformOrigin = 'top left';
         
         nodeEl.addEventListener('click', (e) => {
             e.stopPropagation();
             this.selectNode(nodeData.id);
         });
         
+        // Add to canvas with proper z-index
+        nodeEl.style.zIndex = '10';
         this.canvas.appendChild(nodeEl);
     }
     
@@ -130,6 +145,15 @@ class FlowManager {
             'result': '📊'
         };
         return icons[type] || '⚪';
+    }
+    
+    getTypeDisplayName(type) {
+        const names = {
+            'welcome': 'ウェルカム',
+            'question': '質問',
+            'result': '結果'
+        };
+        return names[type] || type;
     }
     
     renderNodeButtons(buttons) {
@@ -180,17 +204,29 @@ class FlowManager {
         const toRect = this.getNodeCenter(toNode);
         
         const svg = document.getElementById('connections');
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         
-        line.setAttribute('x1', fromRect.x);
-        line.setAttribute('y1', fromRect.y);
-        line.setAttribute('x2', toRect.x);
-        line.setAttribute('y2', toRect.y);
-        line.setAttribute('stroke', '#304992');
-        line.setAttribute('stroke-width', '2');
-        line.setAttribute('marker-end', 'url(#arrowhead)');
+        // Create curved path instead of straight line for better visual flow
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         
-        svg.appendChild(line);
+        const deltaX = toRect.x - fromRect.x;
+        const deltaY = toRect.y - fromRect.y;
+        
+        // Control points for cubic bezier curve
+        const cp1x = fromRect.x + deltaX * 0.3;
+        const cp1y = fromRect.y;
+        const cp2x = toRect.x - deltaX * 0.3;
+        const cp2y = toRect.y;
+        
+        const pathData = `M ${fromRect.x} ${fromRect.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${toRect.x} ${toRect.y}`;
+        
+        path.setAttribute('d', pathData);
+        path.setAttribute('stroke', 'var(--ios-blue)');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('marker-end', 'url(#arrowhead)');
+        path.setAttribute('opacity', '0.8');
+        
+        svg.appendChild(path);
     }
     
     getNodeCenter(nodeEl) {
@@ -376,6 +412,47 @@ class FlowManager {
         document.getElementById('nodeCount').textContent = `ノード数: ${count}`;
     }
     
+    autoFitCanvas() {
+        if (!this.flowConfig || !this.flowConfig.flowConfig) return;
+        
+        const nodes = Object.values(this.flowConfig.flowConfig);
+        if (nodes.length === 0) return;
+        
+        // Calculate bounds of all nodes
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        
+        nodes.forEach(node => {
+            const x = node.position.x;
+            const y = node.position.y;
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x + 320); // Node width estimate
+            maxY = Math.max(maxY, y + 200); // Node height estimate
+        });
+        
+        // Add padding
+        const padding = 50;
+        minX -= padding;
+        minY -= padding;
+        maxX += padding;
+        maxY += padding;
+        
+        // Calculate scale to fit content
+        const canvasRect = this.canvas.getBoundingClientRect();
+        const contentWidth = maxX - minX;
+        const contentHeight = maxY - minY;
+        
+        const scaleX = canvasRect.width / contentWidth;
+        const scaleY = canvasRect.height / contentHeight;
+        this.scale = Math.min(scaleX, scaleY, 1); // Don't scale larger than 1
+        
+        // Center content
+        this.translateX = (canvasRect.width - contentWidth * this.scale) / 2 - minX * this.scale;
+        this.translateY = (canvasRect.height - contentHeight * this.scale) / 2 - minY * this.scale;
+        
+        this.updateCanvasTransform();
+    }
+    
     // Toolbar functions
     zoomIn() {
         this.scale *= 1.2;
@@ -390,10 +467,7 @@ class FlowManager {
     }
     
     resetZoom() {
-        this.scale = 1;
-        this.translateX = 0;
-        this.translateY = 0;
-        this.updateCanvasTransform();
+        this.autoFitCanvas();
     }
 }
 
@@ -504,4 +578,8 @@ function zoomOut() {
 
 function resetZoom() {
     flowManager.resetZoom();
+}
+
+function fitToScreen() {
+    flowManager.autoFitCanvas();
 }
