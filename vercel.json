@@ -25,19 +25,5 @@
         }
       ]
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/live-engine",
-      "dest": "/api/live-engine.js"
-    },
-    {
-      "src": "/designer",
-      "dest": "/designer.html"
-    },
-    {
-      "src": "/",
-      "dest": "/index.html"
-    }
   ]
 }
