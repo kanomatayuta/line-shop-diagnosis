@@ -211,25 +211,63 @@ async function getDynamicSurveyConfig() {
   }
 }
 
-// 究極のフレックスメッセージ作成
+// iOS Design System Colors
+const iosColors = {
+  primary: '#304992',           // メインカラー
+  systemBlue: '#007AFF',
+  systemGreen: '#34C759',
+  systemRed: '#FF3B30',
+  systemOrange: '#FF9500',
+  systemYellow: '#FFCC00',
+  systemPurple: '#AF52DE',
+  systemGray: '#8E8E93',
+  systemGray2: '#AEAEB2',
+  systemGray3: '#C7C7CC',
+  systemGray4: '#D1D1D6',
+  systemGray5: '#E5E5EA',
+  systemGray6: '#F2F2F7',
+  label: '#000000',
+  secondaryLabel: '#3C3C43',
+  tertiaryLabel: '#3C3C4399',
+  quaternaryLabel: '#3C3C432E',
+  background: '#FFFFFF',
+  secondaryBackground: '#F2F2F7',
+  tertiaryBackground: '#FFFFFF',
+}
+
+// iOS風フレックスメッセージ作成
 function createUltimateFlexMessage(step: any): Message {
-  console.log(`🎨 Creating ULTIMATE flex for: ${step.title}`)
+  console.log(`🎨 Creating iOS-style flex for: ${step.title}`)
   
-  const buttons = step.buttons?.map((btn: any) => ({
-    type: 'button',
-    action: {
-      type: 'postback',
-      label: btn.label,
-      data: JSON.stringify({
-        action: btn.action,
-        value: btn.value || '',
-        next: btn.next || ''
-      })
-    },
-    style: 'primary',
-    color: '#FF6B35',
-    height: 'sm'
-  })) || []
+  // 5つ以上のボタンがある場合はカルーセル形式にする
+  if (step.buttons && step.buttons.length >= 5) {
+    return createCarouselMessage(step)
+  }
+  
+  // iOS風カードスタイルのボタン作成
+  const createIOSButton = (btn: any, index: number, total: number) => {
+    const isPrimary = index < Math.min(2, total)
+    return {
+      type: 'button',
+      action: {
+        type: 'postback',
+        label: btn.label,
+        data: JSON.stringify({
+          action: btn.action,
+          value: btn.value || '',
+          next: btn.next || ''
+        })
+      },
+      style: isPrimary ? 'primary' : 'secondary',
+      color: isPrimary ? iosColors.primary : iosColors.systemGray,
+      height: 'md',
+      gravity: 'center'
+    }
+  }
+
+  const buttons = step.buttons?.map((btn: any, index: number) => 
+    createIOSButton(btn, index, step.buttons.length)
+  ) || []
 
   return {
     type: 'flex',
@@ -237,7 +275,7 @@ function createUltimateFlexMessage(step: any): Message {
     contents: {
       type: 'bubble',
       size: 'giga',
-      header: {
+      hero: {
         type: 'box',
         layout: 'vertical',
         contents: [
@@ -248,14 +286,109 @@ function createUltimateFlexMessage(step: any): Message {
             size: 'xl',
             color: '#FFFFFF',
             wrap: true,
+            align: 'center',
+            margin: 'none'
+          }
+        ],
+        backgroundColor: iosColors.primary,
+        paddingAll: '28px',
+        cornerRadius: '16px',
+        spacing: 'none'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'spacer',
+            size: 'md'
+          },
+          {
+            type: 'text',
+            text: step.message,
+            wrap: true,
+            size: 'md',
+            color: iosColors.label,
+            lineSpacing: '8px',
+            align: 'left',
+            margin: 'none'
+          },
+          {
+            type: 'spacer',
+            size: 'lg'
+          }
+        ],
+        paddingAll: '24px',
+        spacing: 'none',
+        backgroundColor: iosColors.background
+      },
+      footer: buttons.length > 0 ? {
+        type: 'box',
+        layout: 'vertical',
+        contents: buttons,
+        spacing: 'sm',
+        paddingAll: '24px',
+        backgroundColor: iosColors.background
+      } : undefined,
+      styles: {
+        hero: {
+          separator: false
+        },
+        body: {
+          separator: false
+        },
+        footer: {
+          separator: false
+        }
+      }
+    }
+  }
+}
+
+// カルーセル形式のメッセージ作成（5つ以上のボタン用）
+function createCarouselMessage(step: any): Message {
+  const buttonsPerCard = 2
+  const cards = []
+  
+  for (let i = 0; i < step.buttons.length; i += buttonsPerCard) {
+    const cardButtons = step.buttons.slice(i, i + buttonsPerCard).map((btn: any) => ({
+      type: 'button',
+      action: {
+        type: 'postback',
+        label: btn.label,
+        data: JSON.stringify({
+          action: btn.action,
+          value: btn.value || '',
+          next: btn.next || ''
+        })
+      },
+      style: 'primary',
+      color: iosColors.primary,
+      height: 'md'
+    }))
+
+    cards.push({
+      type: 'bubble',
+      size: 'micro',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: i === 0 ? step.title : `選択肢 ${Math.floor(i/buttonsPerCard) + 1}`,
+            weight: 'bold',
+            size: 'md',
+            color: '#FFFFFF',
+            wrap: true,
             align: 'center'
           }
         ],
-        backgroundColor: '#FF6B35',
+        backgroundColor: iosColors.primary,
         paddingAll: '20px',
-        spacing: 'md'
+        cornerRadius: '12px'
       },
-      body: {
+      body: i === 0 ? {
         type: 'box',
         layout: 'vertical',
         contents: [
@@ -263,27 +396,46 @@ function createUltimateFlexMessage(step: any): Message {
             type: 'text',
             text: step.message,
             wrap: true,
-            size: 'md',
-            color: '#333333',
-            lineSpacing: '5px',
-            align: 'center'
+            size: 'sm',
+            color: iosColors.label,
+            lineSpacing: '6px'
           }
         ],
-        paddingAll: '20px',
-        spacing: 'md'
-      },
-      footer: buttons.length > 0 ? {
+        paddingAll: '16px',
+        backgroundColor: iosColors.background
+      } : {
         type: 'box',
         layout: 'vertical',
-        contents: buttons,
+        contents: [
+          {
+            type: 'spacer',
+            size: 'sm'
+          }
+        ],
+        backgroundColor: iosColors.background
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        contents: cardButtons,
         spacing: 'sm',
-        paddingAll: '20px'
-      } : undefined,
+        paddingAll: '16px',
+        backgroundColor: iosColors.background
+      },
       styles: {
-        footer: {
-          separator: true
-        }
+        header: { separator: false },
+        body: { separator: false },
+        footer: { separator: false }
       }
+    })
+  }
+
+  return {
+    type: 'flex',
+    altText: step.title,
+    contents: {
+      type: 'carousel',
+      contents: cards
     }
   }
 }
