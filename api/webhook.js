@@ -902,3 +902,42 @@ function sendDiagnosisResult(replyToken, userData) {
   
   return client.replyMessage(replyToken, message);
 }
+
+// 結果表示関数群
+function sendProfitableResult(replyToken, userData) {
+  let sellPrice = 500;
+  if (userData.profit === "low") sellPrice = 500;
+  else if (userData.profit === "medium") sellPrice = 1000;
+  else if (userData.profit === "high") sellPrice = 2000;
+  
+  const message = { type: "text", text: `🙏ご回答ありがとうございます！
+売却可能額 ${sellPrice}万円以上
+※簡易推計です。無料相談をご希望ですか？` };
+  return client.replyMessage(replyToken, message);
+}
+
+function sendOtherAreaResult(replyToken) {
+  const message = { type: "text", text: "🙏アンケートのご回答ありがとうございます！
+申し訳ありませんが、店舗の所在地の関係で店舗売却の可能性が低い結果となりました。
+無料相談をご希望ですか？" };
+  return client.replyMessage(replyToken, message);
+}
+
+function sendLowValueResult(replyToken, userData) {
+  const message = { type: "text", text: "🙏ご回答ありがとうございます！
+売却可能額 300万円以上
+※簡易推計です。無料相談をご希望ですか？" };
+  return client.replyMessage(replyToken, message);
+}
+
+function sendConsultationLink(replyToken, userData) {
+  const url = userData.area === "other" ? "https://timerex.net/s/rendan/38dfc57a" : "https://timerex.net/s/rendan/bae2d85d";
+  const message = { type: "text", text: `承知しました。以下のリンクからご希望の日時をお選びください😊
+${url}` };
+  return client.replyMessage(replyToken, message);
+}
+
+function sendConsultationDecline(replyToken) {
+  const message = { type: "text", text: "ご回答ありがとうございました！もしご興味があればいつでもお問い合わせください。" };
+  return client.replyMessage(replyToken, message);
+}
