@@ -169,22 +169,25 @@ const STEP_BY_STEP_SURVEY = {
   },
   consultation_yes_bae2d85d: {
     title: "無料相談予約",
-    message: "◯◯さん、承知しました。\nそれでは電話で実施させていたきますので、以下のリンクからご希望の日時をお選びください 😌\n\nhttps://timerex.net/s/rendan/bae2d85d",
+    message: "◯◯さん、承知しました。\nそれでは電話で実施させていただきますので、以下のボタンからご希望の日時をお選びください 😌",
     buttons: [
+      { label: "📅 予約ページを開く", action: "uri", uri: "https://timerex.net/s/rendan/bae2d85d" },
       { label: "🔄 最初からやり直す", action: "restart", next: "welcome" }
     ]
   },
   consultation_yes_5ec7367d: {
     title: "無料相談予約",
-    message: "◯◯さん、承知しました。\nそれでは電話で実施させていたきますので、以下のリンクからご希望の日時をお選びください 😌\n\nhttps://timerex.net/s/rendan/5ec7367d",
+    message: "◯◯さん、承知しました。\nそれでは電話で実施させていただきますので、以下のボタンからご希望の日時をお選びください 😌",
     buttons: [
+      { label: "📅 予約ページを開く", action: "uri", uri: "https://timerex.net/s/rendan/5ec7367d" },
       { label: "🔄 最初からやり直す", action: "restart", next: "welcome" }
     ]
   },
   consultation_yes_38dfc57a: {
     title: "無料相談予約",
-    message: "◯◯さん、承知しました。\nそれでは電話で実施させていたきますので、以下のリンクからご希望の日時をお選びください 😌\n\nhttps://timerex.net/s/rendan/38dfc57a",
+    message: "◯◯さん、承知しました。\nそれでは電話で実施させていただきますので、以下のボタンからご希望の日時をお選びください 😌",
     buttons: [
+      { label: "📅 予約ページを開く", action: "uri", uri: "https://timerex.net/s/rendan/38dfc57a" },
       { label: "🔄 最初からやり直す", action: "restart", next: "welcome" }
     ]
   },
@@ -401,21 +404,39 @@ function createUltimateSimpleMessage(step: any, userName?: string): Message {
   
   // 表示設定を反映したボタン作成
   const buttonHeight = displaySettings.buttonSize || 'sm'
-  const buttons = step.buttons?.map((btn: any, index: number) => ({
-    type: 'button',
-    action: {
-      type: 'postback',
-      label: btn.label,
-      data: JSON.stringify({
-        action: btn.action,
-        value: btn.value || '',
-        next: btn.next || ''
-      })
-    },
-    style: 'primary',
-    color: '#007AFF',
-    height: buttonHeight
-  })) || []
+  const buttons = step.buttons?.map((btn: any, index: number) => {
+    // URIアクションの場合
+    if (btn.action === 'uri' && btn.uri) {
+      return {
+        type: 'button',
+        action: {
+          type: 'uri',
+          label: btn.label,
+          uri: btn.uri
+        },
+        style: 'primary',
+        color: '#007AFF',
+        height: buttonHeight
+      }
+    }
+    
+    // 通常のポストバックアクション
+    return {
+      type: 'button',
+      action: {
+        type: 'postback',
+        label: btn.label,
+        data: JSON.stringify({
+          action: btn.action,
+          value: btn.value || '',
+          next: btn.next || ''
+        })
+      },
+      style: 'primary',
+      color: '#007AFF',
+      height: buttonHeight
+    }
+  }) || []
 
   return {
     type: 'flex',
@@ -475,21 +496,39 @@ function createUltimateSimpleCarousel(step: any, userName?: string): Message {
   const cards = []
   
   for (let i = 0; i < step.buttons.length; i += buttonsPerCard) {
-    const cardButtons = step.buttons.slice(i, i + buttonsPerCard).map((btn: any) => ({
-      type: 'button',
-      action: {
-        type: 'postback',
-        label: btn.label,
-        data: JSON.stringify({
-          action: btn.action,
-          value: btn.value || '',
-          next: btn.next || ''
-        })
-      },
-      style: 'primary',
-      color: '#007AFF',
-      height: 'sm'
-    }))
+    const cardButtons = step.buttons.slice(i, i + buttonsPerCard).map((btn: any) => {
+      // URIアクションの場合
+      if (btn.action === 'uri' && btn.uri) {
+        return {
+          type: 'button',
+          action: {
+            type: 'uri',
+            label: btn.label,
+            uri: btn.uri
+          },
+          style: 'primary',
+          color: '#007AFF',
+          height: 'sm'
+        }
+      }
+      
+      // 通常のポストバックアクション
+      return {
+        type: 'button',
+        action: {
+          type: 'postback',
+          label: btn.label,
+          data: JSON.stringify({
+            action: btn.action,
+            value: btn.value || '',
+            next: btn.next || ''
+          })
+        },
+        style: 'primary',
+        color: '#007AFF',
+        height: 'sm'
+      }
+    })
 
     cards.push({
       type: 'bubble',

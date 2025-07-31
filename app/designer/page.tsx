@@ -16,6 +16,7 @@ interface SurveyStep {
     action: string
     value?: string
     next?: string
+    uri?: string
   }>
   displaySettings?: DisplaySettings
 }
@@ -146,13 +147,18 @@ export default function DesignerPage() {
   }
 
   const updateStep = (stepKey: string, field: keyof SurveyStep, value: any) => {
-    setSurveyConfig(prev => ({
-      ...prev,
-      [stepKey]: {
-        ...prev[stepKey],
-        [field]: value
+    console.log('🔄 updateStep called:', { stepKey, field, value })
+    setSurveyConfig(prev => {
+      const updated = {
+        ...prev,
+        [stepKey]: {
+          ...prev[stepKey],
+          [field]: value
+        }
       }
-    }))
+      console.log('📝 Survey config updated:', updated[stepKey])
+      return updated
+    })
     setHasUnsavedChanges(true)
   }
 
@@ -255,6 +261,11 @@ export default function DesignerPage() {
     const [editValue, setEditValue] = useState(value)
     const [isEditing, setIsEditing] = useState(false)
     const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
+
+    // Update editValue when value prop changes
+    useEffect(() => {
+      setEditValue(value)
+    }, [value])
 
     useEffect(() => {
       if (isEditing && inputRef.current) {
@@ -564,15 +575,34 @@ export default function DesignerPage() {
                   {/* Title */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      タイトル
+                      📝 ステップタイトル
                     </label>
-                    <InlineEdit
-                      value={surveyConfig[selectedStep]?.title || ''}
-                      onSave={(value) => updateStep(selectedStep, 'title', value)}
-                      stepKey={selectedStep}
-                      field="title"
-                      placeholder="ステップのタイトルを入力"
-                    />
+                    <div className="border-2 border-gray-300 rounded-lg bg-white hover:border-blue-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all">
+                      <input
+                        type="text"
+                        value={surveyConfig[selectedStep]?.title || ''}
+                        onChange={(e) => {
+                          console.log('📝 Title input changed:', e.target.value)
+                          updateStep(selectedStep, 'title', e.target.value)
+                        }}
+                        onFocus={(e) => {
+                          console.log('🎯 Title input focused')
+                          e.target.select()
+                        }}
+                        placeholder="ステップのタイトルを入力してください"
+                        className="w-full px-4 py-3 border-0 bg-transparent focus:ring-0 focus:outline-none text-lg font-medium text-gray-900 placeholder-gray-400"
+                        autoComplete="off"
+                        spellCheck="false"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      💡 このタイトルは管理用です。LINEには表示されません
+                    </p>
+                    {process.env.NODE_ENV === 'development' && (
+                      <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                        <strong>デバッグ:</strong> 現在の値: "{surveyConfig[selectedStep]?.title}"
+                      </div>
+                    )}
                   </div>
 
                   {/* Message */}
@@ -589,6 +619,21 @@ export default function DesignerPage() {
                         rows={4}
                       />
                     </div>
+                    
+                    {/* Name replacement indicator */}
+                    {surveyConfig[selectedStep]?.message?.includes('◯◯さん') && (
+                      <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm text-blue-800 flex items-center gap-2">
+                          <span className="text-lg">💡</span>
+                          <span className="font-medium">名前の自動置換</span>
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          「◯◯さん」の部分は、LINEユーザーの実際の表示名に自動で置き換わります。
+                          <br />
+                          例: ◯◯さん → 田中太郎さん
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Buttons */}
@@ -707,47 +752,94 @@ export default function DesignerPage() {
                             
                             <div>
                               <label className="block text-xs font-medium text-gray-600 mb-1">
-                                次のステップ
+                                アクション設定
                               </label>
-                              <div className="flex gap-2">
+                              <div className="space-y-2">
                                 <select
-                                  value={button.next || ''}
+                                  value={button.action || 'postback'}
                                   onChange={(e) => {
                                     const newButtons = [...(surveyConfig[selectedStep]?.buttons || [])]
-                                    newButtons[index] = { ...newButtons[index], next: e.target.value }
+                                    newButtons[index] = { ...newButtons[index], action: e.target.value }
+                                    // URIアクションの場合はnextをクリアし、それ以外はuriをクリア
+                                    if (e.target.value === 'uri') {
+                                      newButtons[index].next = undefined
+                                    } else {
+                                      newButtons[index].uri = undefined
+                                    }
                                     updateStep(selectedStep, 'buttons', newButtons)
                                   }}
-                                  className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                                 >
-                                  <option value="">選択してください</option>
-                                  {Object.keys(surveyConfig)
-                                    .filter(key => key !== selectedStep)
-                                    .map(stepKey => (
-                                    <option key={stepKey} value={stepKey}>
-                                      {surveyConfig[stepKey]?.title} ({stepKey})
-                                    </option>
-                                  ))}
+                                  <option value="postback">次のステップへ進む</option>
+                                  <option value="uri">URLを開く</option>
+                                  <option value="restart">最初からやり直す</option>
                                 </select>
-                                <button
-                                  onClick={() => {
-                                    const newStepId = `step_${Date.now()}`
-                                    const newButtons = [...(surveyConfig[selectedStep]?.buttons || [])]
-                                    newButtons[index] = { ...newButtons[index], next: newStepId }
-                                    updateStep(selectedStep, 'buttons', newButtons)
-                                    setSurveyConfig(prev => ({
-                                      ...prev,
-                                      [newStepId]: {
-                                        title: '新しいステップ',
-                                        message: 'メッセージを入力してください',
-                                        buttons: []
-                                      }
-                                    }))
-                                    setSelectedStep(newStepId)
-                                  }}
-                                  className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition-colors whitespace-nowrap"
-                                >
-                                  新規作成
-                                </button>
+                                
+                                {button.action === 'uri' ? (
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                      開くURL
+                                    </label>
+                                    <InlineEdit
+                                      value={button.uri || ''}
+                                      onSave={(value) => {
+                                        const newButtons = [...(surveyConfig[selectedStep]?.buttons || [])]
+                                        newButtons[index] = { ...newButtons[index], uri: value }
+                                        updateStep(selectedStep, 'buttons', newButtons)
+                                      }}
+                                      stepKey={selectedStep}
+                                      field="buttonUri"
+                                      buttonIndex={index}
+                                      placeholder="https://example.com"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                      次のステップ
+                                    </label>
+                                    <div className="flex gap-2">
+                                      <select
+                                        value={button.next || ''}
+                                        onChange={(e) => {
+                                          const newButtons = [...(surveyConfig[selectedStep]?.buttons || [])]
+                                          newButtons[index] = { ...newButtons[index], next: e.target.value }
+                                          updateStep(selectedStep, 'buttons', newButtons)
+                                        }}
+                                        className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                      >
+                                        <option value="">選択してください</option>
+                                        {Object.keys(surveyConfig)
+                                          .filter(key => key !== selectedStep)
+                                          .map(stepKey => (
+                                          <option key={stepKey} value={stepKey}>
+                                            {surveyConfig[stepKey]?.title} ({stepKey})
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <button
+                                        onClick={() => {
+                                          const newStepId = `step_${Date.now()}`
+                                          const newButtons = [...(surveyConfig[selectedStep]?.buttons || [])]
+                                          newButtons[index] = { ...newButtons[index], next: newStepId }
+                                          updateStep(selectedStep, 'buttons', newButtons)
+                                          setSurveyConfig(prev => ({
+                                            ...prev,
+                                            [newStepId]: {
+                                              title: '新しいステップ',
+                                              message: 'メッセージを入力してください',
+                                              buttons: []
+                                            }
+                                          }))
+                                          setSelectedStep(newStepId)
+                                        }}
+                                        className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition-colors whitespace-nowrap"
+                                      >
+                                        新規作成
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -760,16 +852,29 @@ export default function DesignerPage() {
                                 {button.label || '(空)'}
                               </span>
                               <span className="text-gray-400">→</span>
-                              <span className={`px-2 py-1 rounded ${
-                                button.next && surveyConfig[button.next] 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {button.next 
-                                  ? (surveyConfig[button.next]?.title || button.next)
-                                  : '未設定'
-                                }
-                              </span>
+                              {button.action === 'uri' ? (
+                                <span className={`px-2 py-1 rounded ${
+                                  button.uri 
+                                    ? 'bg-purple-100 text-purple-800' 
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {button.uri 
+                                    ? `🔗 ${button.uri}`
+                                    : 'URL未設定'
+                                  }
+                                </span>
+                              ) : (
+                                <span className={`px-2 py-1 rounded ${
+                                  button.next && surveyConfig[button.next] 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {button.next 
+                                    ? (surveyConfig[button.next]?.title || button.next)
+                                    : '未設定'
+                                  }
+                                </span>
+                              )}
                             </div>
                           </div>
                         </motion.div>

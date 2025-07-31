@@ -124,22 +124,25 @@ let legacyConfig = {
   },
   consultation_yes_bae2d85d: {
     title: "無料相談予約",
-    message: "◯◯さん、承知しました。\nそれでは電話で実施させていたきますので、以下のリンクからご希望の日時をお選びください 😌\n\nhttps://timerex.net/s/rendan/bae2d85d",
+    message: "◯◯さん、承知しました。\nそれでは電話で実施させていただきますので、以下のボタンからご希望の日時をお選びください 😌",
     buttons: [
+      { label: "📅 予約ページを開く", action: "uri", uri: "https://timerex.net/s/rendan/bae2d85d" },
       { label: "🔄 最初からやり直す", action: "restart", next: "welcome" }
     ]
   },
   consultation_yes_5ec7367d: {
     title: "無料相談予約",
-    message: "◯◯さん、承知しました。\nそれでは電話で実施させていたきますので、以下のリンクからご希望の日時をお選びください 😌\n\nhttps://timerex.net/s/rendan/5ec7367d",
+    message: "◯◯さん、承知しました。\nそれでは電話で実施させていただきますので、以下のボタンからご希望の日時をお選びください 😌",
     buttons: [
+      { label: "📅 予約ページを開く", action: "uri", uri: "https://timerex.net/s/rendan/5ec7367d" },
       { label: "🔄 最初からやり直す", action: "restart", next: "welcome" }
     ]
   },
   consultation_yes_38dfc57a: {
     title: "無料相談予約",
-    message: "◯◯さん、承知しました。\nそれでは電話で実施させていたきますので、以下のリンクからご希望の日時をお選びください 😌\n\nhttps://timerex.net/s/rendan/38dfc57a",
+    message: "◯◯さん、承知しました。\nそれでは電話で実施させていただきますので、以下のボタンからご希望の日時をお選びください 😌",
     buttons: [
+      { label: "📅 予約ページを開く", action: "uri", uri: "https://timerex.net/s/rendan/38dfc57a" },
       { label: "🔄 最初からやり直す", action: "restart", next: "welcome" }
     ]
   },

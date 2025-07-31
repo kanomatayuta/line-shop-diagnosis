@@ -5,6 +5,7 @@ export interface SurveyButton {
   action: string
   value?: string
   next?: string
+  uri?: string
 }
 
 export interface DisplaySettings {
