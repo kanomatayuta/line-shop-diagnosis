@@ -642,15 +642,27 @@ export default function DesignerPage() {
                       <label className="block text-sm font-medium text-gray-700">
                         選択肢ボタン ({surveyConfig[selectedStep]?.buttons?.length || 0})
                       </label>
-                      <button
-                        onClick={() => {
-                          const newButtons = [...(surveyConfig[selectedStep]?.buttons || []), { label: '新しい選択肢', action: '', value: '', next: '' }]
-                          updateStep(selectedStep, 'buttons', newButtons)
-                        }}
-                        className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200 transition-colors"
-                      >
-                        + 選択肢を追加
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            const newButtons = [...(surveyConfig[selectedStep]?.buttons || []), { label: '📅 予約ページを開く', action: 'uri', uri: 'https://timerex.net/s/rendan/5ec7367d' }]
+                            updateStep(selectedStep, 'buttons', newButtons)
+                          }}
+                          className="text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded hover:bg-purple-200 transition-colors flex items-center gap-1"
+                          title="相談予約用のURIボタンを追加"
+                        >
+                          🔗 URLボタン
+                        </button>
+                        <button
+                          onClick={() => {
+                            const newButtons = [...(surveyConfig[selectedStep]?.buttons || []), { label: '新しい選択肢', action: 'postback', value: '', next: '' }]
+                            updateStep(selectedStep, 'buttons', newButtons)
+                          }}
+                          className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200 transition-colors"
+                        >
+                          + 選択肢を追加
+                        </button>
+                      </div>
                     </div>
 
                     {/* LINE表示設定 */}
@@ -776,22 +788,26 @@ export default function DesignerPage() {
                                 </select>
                                 
                                 {button.action === 'uri' ? (
-                                  <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                                      開くURL
+                                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                                    <label className="block text-xs font-medium text-purple-800 mb-2 flex items-center gap-1">
+                                      🔗 開くURL
+                                      <span className="text-xs text-purple-600 bg-purple-100 px-2 py-0.5 rounded">必須</span>
                                     </label>
-                                    <InlineEdit
+                                    <input
+                                      type="url"
                                       value={button.uri || ''}
-                                      onSave={(value) => {
+                                      onChange={(e) => {
+                                        console.log('🔗 URI changed:', e.target.value)
                                         const newButtons = [...(surveyConfig[selectedStep]?.buttons || [])]
-                                        newButtons[index] = { ...newButtons[index], uri: value }
+                                        newButtons[index] = { ...newButtons[index], uri: e.target.value }
                                         updateStep(selectedStep, 'buttons', newButtons)
                                       }}
-                                      stepKey={selectedStep}
-                                      field="buttonUri"
-                                      buttonIndex={index}
-                                      placeholder="https://example.com"
+                                      placeholder="https://timerex.net/s/rendan/5ec7367d"
+                                      className="w-full px-3 py-2 border border-purple-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm font-mono"
                                     />
+                                    <p className="text-xs text-purple-600 mt-1">
+                                      💡 このボタンをタップするとURLが新しいタブで開きます
+                                    </p>
                                   </div>
                                 ) : (
                                   <div>
