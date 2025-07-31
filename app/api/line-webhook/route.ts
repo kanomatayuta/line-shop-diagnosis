@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Client, Message, WebhookEvent, MessageEvent, PostbackEvent, FollowEvent } from '@line/bot-sdk'
 import { getSurveyConfig } from '../../../lib/shared-config'
 import { UserSession, RateLimitInfo } from '../../../types/survey'
-import { recordRequest, recordMessage } from '../stats/route'
+import { recordRequest, recordMessage } from '../../../lib/stats-manager'
 
 // 🎯 完全版LINEアンケートツール - 設定を直接取得
 function getCurrentSurveyConfig() {
