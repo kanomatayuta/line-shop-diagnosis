@@ -28,6 +28,7 @@ export interface UserSession {
   data: Record<string, any>
   lastActivity: number
   requestCount: number
+  userName?: string
 }
 
 export interface RateLimitInfo {

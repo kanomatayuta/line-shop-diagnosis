@@ -257,6 +257,23 @@ function getOrCreateSession(userId: string): UserSession {
   return session
 }
 
+// 👤 ユーザープロフィール取得
+async function getUserProfile(userId: string): Promise<string> {
+  try {
+    if (!lineClient) {
+      console.error('❌ LINE client not initialized')
+      return 'お客様'
+    }
+    
+    const profile = await lineClient.getProfile(userId)
+    console.log(`👤 User profile fetched: ${profile.displayName}`)
+    return profile.displayName || 'お客様'
+  } catch (error) {
+    console.error('❌ Failed to get user profile:', error)
+    return 'お客様'
+  }
+}
+
 // 🧹 強化されたクリーンアップシステム
 function cleanupOldData() {
   const now = Date.now()
@@ -362,8 +379,13 @@ const iosColors = {
   tertiaryBackground: '#FFFFFF',
 }
 
+// 💬 メッセージに名前を挿入
+function personalizeMessage(message: string, userName: string): string {
+  return message.replace(/◯◯さん/g, `${userName}さん`)
+}
+
 // 🌟 限界を越えたシンプル美学メッセージ作成
-function createUltimateSimpleMessage(step: any): Message {
+function createUltimateSimpleMessage(step: any, userName?: string): Message {
   console.log(`🎯 Creating ultra-simple message: ${step.title}`)
   
   // 表示設定に基づくレイアウト判定
@@ -371,8 +393,11 @@ function createUltimateSimpleMessage(step: any): Message {
   const useCarousel = displaySettings.layout === 'carousel' && step.buttons && step.buttons.length > 4
   
   if (useCarousel) {
-    return createUltimateSimpleCarousel(step)
+    return createUltimateSimpleCarousel(step, userName)
   }
+  
+  // メッセージの個人化
+  const personalizedMessage = userName ? personalizeMessage(step.message, userName) : step.message
   
   // 表示設定を反映したボタン作成
   const buttonHeight = displaySettings.buttonSize || 'sm'
@@ -416,7 +441,7 @@ function createUltimateSimpleMessage(step: any): Message {
           },
           {
             type: 'text',
-            text: step.message,
+            text: personalizedMessage,
             wrap: true,
             size: 'md',
             color: '#333333',
@@ -444,7 +469,8 @@ function createUltimateSimpleMessage(step: any): Message {
 }
 
 // 🎯 極限シンプルカルーセル（多数のボタン用）
-function createUltimateSimpleCarousel(step: any): Message {
+function createUltimateSimpleCarousel(step: any, userName?: string): Message {
+  const personalizedMessage = userName ? personalizeMessage(step.message, userName) : step.message
   const buttonsPerCard = 2
   const cards = []
   
@@ -487,7 +513,7 @@ function createUltimateSimpleCarousel(step: any): Message {
             },
             {
               type: 'text',
-              text: step.message,
+              text: personalizedMessage,
               wrap: true,
               size: 'sm',
               color: '#333333',
@@ -550,6 +576,12 @@ async function handleCompleteMessage(event: MessageEvent): Promise<Message | nul
   // セッション取得または作成
   const session = getOrCreateSession(userId)
   
+  // ユーザー名を取得（初回のみ）
+  if (!session.userName) {
+    session.userName = await getUserProfile(userId)
+    console.log(`📝 User name stored: ${session.userName}`)
+  }
+  
   // スタート系のワード（無料診断も追加）
   if (text.includes('スタート') || 
       text.includes('開始') ||
@@ -564,14 +596,14 @@ async function handleCompleteMessage(event: MessageEvent): Promise<Message | nul
     const config = getCurrentSurveyConfig()
     session.currentStep = 'welcome'
     session.data = {}
-    return createUltimateSimpleMessage(config.welcome)
+    return createUltimateSimpleMessage(config.welcome, session.userName)
   }
 
   // 現在のステップを継続
   const config = getCurrentSurveyConfig()
   const currentStep = config[session.currentStep]
   if (currentStep) {
-    return createUltimateSimpleMessage(currentStep)
+    return createUltimateSimpleMessage(currentStep, session.userName)
   }
 
   // 🎯 極限シンプルなデフォルトメッセージ
@@ -694,6 +726,12 @@ async function handleCompletePostback(event: PostbackEvent): Promise<Message | n
     
     // セッション取得または作成
     const session = getOrCreateSession(userId)
+    
+    // ユーザー名を取得（初回のみ）
+    if (!session.userName) {
+      session.userName = await getUserProfile(userId)
+      console.log(`📝 User name stored: ${session.userName}`)
+    }
 
     // 回答データを保存して次のステップに進む
     if (next) {
@@ -709,7 +747,7 @@ async function handleCompletePostback(event: PostbackEvent): Promise<Message | n
         }
         
         session.currentStep = next
-        return createUltimateSimpleMessage(nextStep)
+        return createUltimateSimpleMessage(nextStep, session.userName)
       }
     }
 
@@ -719,25 +757,25 @@ async function handleCompletePostback(event: PostbackEvent): Promise<Message | n
         const config = getCurrentSurveyConfig()
         session.currentStep = 'welcome'
         session.data = {}
-        return createUltimateSimpleMessage(config.welcome)
+        return createUltimateSimpleMessage(config.welcome, session.userName)
       
       case 'report':
         return {
           type: 'text',
-          text: `📊 診断レポート\n\n✨ 回答結果：\n📍 エリア: ${session.data.area || '未回答'}\n💼 経営状況: ${session.data.business_status || '未回答'}\n💰 営業利益: ${session.data.annual_profit || '未回答'}\n🏢 階数: ${session.data.floor_level || '未回答'}\n🏪 商業施設: ${session.data.commercial_facility || '未回答'}\n📦 固定資産: ${session.data.fixed_assets || '未回答'}\n👥 従業員: ${session.data.employees || '未回答'}\n\n🔄 再診断は「診断開始」で！`
+          text: `📊 診断レポート\n\n✨ ${session.userName}さんの回答結果：\n📍 エリア: ${session.data.area || '未回答'}\n💼 経営状況: ${session.data.business_status || '未回答'}\n💰 営業利益: ${session.data.annual_profit || '未回答'}\n🏢 階数: ${session.data.floor_level || '未回答'}\n🏪 商業施設: ${session.data.commercial_facility || '未回答'}\n📦 固定資産: ${session.data.fixed_assets || '未回答'}\n👥 従業員: ${session.data.employees || '未回答'}\n\n🔄 再診断は「診断開始」で！`
         }
       
       case 'consultation':
         return {
           type: 'text',
-          text: `💬 個別相談のお申し込みありがとうございます！\n\n📋 診断結果を基に専門スタッフがご提案いたします。\n📞 近日中にご連絡させていただきます。`
+          text: `💬 ${session.userName}さん、個別相談のお申し込みありがとうございます！\n\n📋 診断結果を基に専門スタッフがご提案いたします。\n📞 近日中にご連絡させていただきます。`
         }
       
       case 'start':
         const startConfig = getCurrentSurveyConfig()
         session.currentStep = 'area'
         session.data = {}
-        return createUltimateSimpleMessage(startConfig.area)
+        return createUltimateSimpleMessage(startConfig.area, session.userName)
       
       default:
         return {
@@ -825,10 +863,15 @@ export async function POST(request: NextRequest) {
           console.log('👋 Follow event - Starting survey')
           const userId = event.source.userId!
           const session = getOrCreateSession(userId)
+          
+          // ユーザー名を取得
+          session.userName = await getUserProfile(userId)
+          console.log(`📝 User name stored: ${session.userName}`)
+          
           const config = getCurrentSurveyConfig()
           session.currentStep = 'welcome'
           session.data = {}
-          ultimateMessage = createUltimateSimpleMessage(config.welcome)
+          ultimateMessage = createUltimateSimpleMessage(config.welcome, session.userName)
           break
           
         default:
