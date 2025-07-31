@@ -595,9 +595,6 @@ export default function DesignerPage() {
                         spellCheck="false"
                       />
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      💡 このタイトルは管理用です。LINEには表示されません
-                    </p>
                     {process.env.NODE_ENV === 'development' && (
                       <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
                         <strong>デバッグ:</strong> 現在の値: "{surveyConfig[selectedStep]?.title}"

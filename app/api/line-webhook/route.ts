@@ -300,18 +300,17 @@ function cleanupOldData() {
     }
   }
   
-  // 古いポストバックデータを削除（5分以上古いものを削除）
+  // 古いポストバックデータを削除（30分以上古いものを削除）
   for (const [userId, postbacks] of Array.from(processedPostbacks.entries())) {
-    const validPostbacks = Array.from(postbacks).filter(pb => {
-      const timestamp = pb.split('_').pop()
-      return (now - parseInt(timestamp || '0') * 1000) < 300000 // 5分以内のデータのみ保持
+    const validPostbacks = postbacks.filter(pb => {
+      return (now - pb.timestamp) < POSTBACK_EXPIRY_TIME
     })
     
     if (validPostbacks.length === 0) {
       processedPostbacks.delete(userId)
       cleanedPostbacks++
-    } else if (validPostbacks.length !== postbacks.size) {
-      processedPostbacks.set(userId, new Set(validPostbacks))
+    } else if (validPostbacks.length !== postbacks.length) {
+      processedPostbacks.set(userId, validPostbacks)
     }
   }
   
@@ -713,30 +712,72 @@ async function handleCompleteMessage(event: MessageEvent): Promise<Message | nul
   }
 }
 
-// 🛡️ ボタン重複押下防止システム
-const processedPostbacks = new Map<string, Set<string>>()
+// 🛡️ 強化された重複押下防止システム
+const processedPostbacks = new Map<string, Array<{data: string, timestamp: number, step: string}>>()
+const POSTBACK_EXPIRY_TIME = 30 * 60 * 1000 // 30分間は重複として扱う
 
-// 🎯 完全版ポストバック処理（重複防止・レート制限付き）
+// 有効なステップ遷移をチェック
+function isValidTransition(currentStep: string, targetStep: string): boolean {
+  const config = getCurrentSurveyConfig()
+  const current = config[currentStep]
+  
+  if (!current || !current.buttons) return false
+  
+  // 現在のステップのボタンから遷移可能なステップかチェック
+  return current.buttons.some(button => button.next === targetStep)
+}
+
+// 🎯 完全版ポストバック処理（強化された重複防止・レート制限付き）
 async function handleCompletePostback(event: PostbackEvent): Promise<Message | null> {
   const userId = event.source.userId!
   const postbackData = event.postback.data
+  const currentTime = Date.now()
   
   console.log(`🔘 Postback from ${userId}: ${postbackData}`)
   
-  // 重複ボタン押下チェック
-  const userPostbacks = processedPostbacks.get(userId) || new Set()
-  const postbackHash = `${postbackData}_${Date.now().toString().slice(-6)}` // 最近6桁のタイムスタンプ
+  // セッション取得（現在のステップ情報に必要）
+  const session = getOrCreateSession(userId)
   
-  // 同じポストバックが短時間（5秒以内）に送信された場合は無視
-  const recentPostbacks = Array.from(userPostbacks).filter(pb => {
-    const timestamp = pb.split('_').pop()
-    return Date.now() - parseInt(timestamp || '0') * 1000 < 5000
-  })
+  // ユーザーのポストバック履歴を取得
+  const userPostbacks = processedPostbacks.get(userId) || []
   
-  const isDuplicate = recentPostbacks.some(pb => pb.startsWith(postbackData))
-  if (isDuplicate) {
-    console.log(`🚫 Duplicate postback ignored for ${userId}`)
-    return null // 重複の場合は何も返さない
+  // 期限切れのポストバックを削除
+  const validPostbacks = userPostbacks.filter(pb => 
+    currentTime - pb.timestamp < POSTBACK_EXPIRY_TIME
+  )
+  
+  // ポストバックデータをパース
+  let parsedData: any
+  try {
+    parsedData = JSON.parse(postbackData)
+  } catch (error) {
+    console.log(`⚠️ Invalid postback data: ${postbackData}`)
+    return null
+  }
+  
+  // 厳密な重複・古いステップチェック
+  const isDuplicateData = validPostbacks.some(pb => pb.data === postbackData)
+  
+  // 現在のステップと異なるステップへの遷移を試みる古いボタンをチェック
+  const isInvalidTransition = parsedData.next && 
+                             session.currentStep !== 'welcome' && // ウェルカムステップは常に許可
+                             parsedData.next !== session.currentStep &&
+                             !isValidTransition(session.currentStep, parsedData.next)
+  
+  if (isDuplicateData) {
+    console.log(`🚫 Duplicate postback data ignored for ${userId}: ${postbackData}`)
+    return {
+      type: 'text',
+      text: '⚠️ このボタンは既に処理済みです。\n\n最新のメッセージから操作をお願いします。'
+    }
+  }
+  
+  if (isInvalidTransition) {
+    console.log(`🚫 Invalid transition attempt for ${userId}. Current: ${session.currentStep}, Target: ${parsedData.next}`)
+    return {
+      type: 'text',
+      text: '⚠️ 古いメッセージのボタンが押されました。\n\n現在の質問に回答してください。'
+    }
   }
   
   // レート制限チェック
@@ -747,24 +788,22 @@ async function handleCompletePostback(event: PostbackEvent): Promise<Message | n
     }
   }
   
-  // ポストバック記録
-  userPostbacks.add(postbackHash)
-  processedPostbacks.set(userId, userPostbacks)
+  // 新しいポストバックを記録
+  validPostbacks.push({
+    data: postbackData,
+    timestamp: currentTime,
+    step: session.currentStep
+  })
+  processedPostbacks.set(userId, validPostbacks)
   
-  // 古いポストバック記録をクリーンアップ（10個以上になったら古いものを削除）
-  if (userPostbacks.size > 10) {
-    const sortedPostbacks = Array.from(userPostbacks).sort()
-    for (let i = 0; i < userPostbacks.size - 10; i++) {
-      userPostbacks.delete(sortedPostbacks[i])
-    }
+  // ポストバック履歴の上限チェック（20個以上になったら古いものを削除）
+  if (validPostbacks.length > 20) {
+    const sortedPostbacks = validPostbacks.sort((a, b) => b.timestamp - a.timestamp)
+    processedPostbacks.set(userId, sortedPostbacks.slice(0, 20))
   }
   
   try {
-    const data = JSON.parse(postbackData)
-    const { action, value, next } = data
-    
-    // セッション取得または作成
-    const session = getOrCreateSession(userId)
+    const { action, value, next } = parsedData
     
     // ユーザー名を取得（初回のみ）
     if (!session.userName) {
