@@ -107,6 +107,10 @@ export default function DesignerPage() {
         body: JSON.stringify({ config: surveyConfig }),
       })
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
       const data = await response.json()
       if (data.success) {
         setHasUnsavedChanges(false)
@@ -121,9 +125,21 @@ export default function DesignerPage() {
           notification.style.opacity = '0'
           setTimeout(() => notification.remove(), 300)
         }, 2000)
+      } else {
+        throw new Error(data.error || 'Save failed')
       }
     } catch (error) {
       console.error('Save failed:', error)
+      
+      // Error notification
+      const notification = document.createElement('div')
+      notification.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-3 py-2 rounded text-sm shadow-lg z-50'
+      notification.innerHTML = '❌ 保存エラー'
+      document.body.appendChild(notification)
+      setTimeout(() => {
+        notification.style.opacity = '0'
+        setTimeout(() => notification.remove(), 300)
+      }, 3000)
     } finally {
       setIsSaving(false)
     }

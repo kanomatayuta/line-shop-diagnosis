@@ -229,7 +229,7 @@ function checkRateLimit(userId: string): boolean {
   return true
 }
 
-// セッション管理
+// 🛡️ 強化されたセッション管理
 function getOrCreateSession(userId: string): UserSession {
   const now = Date.now()
   let session = userSessions.get(userId)
@@ -239,27 +239,36 @@ function getOrCreateSession(userId: string): UserSession {
       currentStep: 'welcome',
       data: {},
       lastActivity: now,
-      requestCount: 0
+      requestCount: 1
     }
     userSessions.set(userId, session)
-    console.log(`👤 New session created for user ${userId}`)
+    console.log(`🆕 New session created for user ${userId}`)
   } else {
     session.lastActivity = now
-    session.requestCount++
+    session.requestCount = (session.requestCount || 0) + 1
+    
+    // セッションデータの整合性チェック
+    if (!session.data) session.data = {}
+    if (!session.currentStep) session.currentStep = 'welcome'
+    
+    console.log(`♻️ Session refreshed for user ${userId} (requests: ${session.requestCount})`)
   }
   
   return session
 }
 
-// 古いセッションとレート制限データをクリーンアップ
+// 🧹 強化されたクリーンアップシステム
 function cleanupOldData() {
   const now = Date.now()
+  let cleanedSessions = 0
+  let cleanedRateLimits = 0
+  let cleanedPostbacks = 0
   
   // 古いセッションを削除
   for (const [userId, session] of Array.from(userSessions.entries())) {
     if ((now - session.lastActivity) > SESSION_TIMEOUT) {
       userSessions.delete(userId)
-      console.log(`🗑️ Cleaned up old session for user ${userId}`)
+      cleanedSessions++
     }
   }
   
@@ -267,7 +276,27 @@ function cleanupOldData() {
   for (const [userId, limit] of Array.from(rateLimits.entries())) {
     if (now > limit.resetTime) {
       rateLimits.delete(userId)
+      cleanedRateLimits++
     }
+  }
+  
+  // 古いポストバックデータを削除（5分以上古いものを削除）
+  for (const [userId, postbacks] of Array.from(processedPostbacks.entries())) {
+    const validPostbacks = Array.from(postbacks).filter(pb => {
+      const timestamp = pb.split('_').pop()
+      return (now - parseInt(timestamp || '0') * 1000) < 300000 // 5分以内のデータのみ保持
+    })
+    
+    if (validPostbacks.length === 0) {
+      processedPostbacks.delete(userId)
+      cleanedPostbacks++
+    } else if (validPostbacks.length !== postbacks.size) {
+      processedPostbacks.set(userId, new Set(validPostbacks))
+    }
+  }
+  
+  if (cleanedSessions > 0 || cleanedRateLimits > 0 || cleanedPostbacks > 0) {
+    console.log(`🧹 Cleanup completed: ${cleanedSessions} sessions, ${cleanedRateLimits} rate limits, ${cleanedPostbacks} postback caches`)
   }
 }
 
@@ -613,11 +642,31 @@ async function handleCompleteMessage(event: MessageEvent): Promise<Message | nul
   }
 }
 
-// 🎯 完全版ポストバック処理（レート制限付き）
+// 🛡️ ボタン重複押下防止システム
+const processedPostbacks = new Map<string, Set<string>>()
+
+// 🎯 完全版ポストバック処理（重複防止・レート制限付き）
 async function handleCompletePostback(event: PostbackEvent): Promise<Message | null> {
   const userId = event.source.userId!
+  const postbackData = event.postback.data
   
-  console.log(`🔘 Postback from ${userId}: ${event.postback.data}`)
+  console.log(`🔘 Postback from ${userId}: ${postbackData}`)
+  
+  // 重複ボタン押下チェック
+  const userPostbacks = processedPostbacks.get(userId) || new Set()
+  const postbackHash = `${postbackData}_${Date.now().toString().slice(-6)}` // 最近6桁のタイムスタンプ
+  
+  // 同じポストバックが短時間（5秒以内）に送信された場合は無視
+  const recentPostbacks = Array.from(userPostbacks).filter(pb => {
+    const timestamp = pb.split('_').pop()
+    return Date.now() - parseInt(timestamp || '0') * 1000 < 5000
+  })
+  
+  const isDuplicate = recentPostbacks.some(pb => pb.startsWith(postbackData))
+  if (isDuplicate) {
+    console.log(`🚫 Duplicate postback ignored for ${userId}`)
+    return null // 重複の場合は何も返さない
+  }
   
   // レート制限チェック
   if (!checkRateLimit(userId)) {
@@ -627,8 +676,20 @@ async function handleCompletePostback(event: PostbackEvent): Promise<Message | n
     }
   }
   
+  // ポストバック記録
+  userPostbacks.add(postbackHash)
+  processedPostbacks.set(userId, userPostbacks)
+  
+  // 古いポストバック記録をクリーンアップ（10個以上になったら古いものを削除）
+  if (userPostbacks.size > 10) {
+    const sortedPostbacks = Array.from(userPostbacks).sort()
+    for (let i = 0; i < userPostbacks.size - 10; i++) {
+      userPostbacks.delete(sortedPostbacks[i])
+    }
+  }
+  
   try {
-    const data = JSON.parse(event.postback.data)
+    const data = JSON.parse(postbackData)
     const { action, value, next } = data
     
     // セッション取得または作成
@@ -697,6 +758,8 @@ async function handleCompletePostback(event: PostbackEvent): Promise<Message | n
 export async function POST(request: NextRequest) {
   console.log('🔥 ULTIMATE WEBHOOK TRIGGERED!')
   console.log('🎯 Time:', new Date().toISOString())
+  console.log('🌐 Request URL:', request.url)
+  console.log('📍 Method:', request.method)
   
   try {
     const body = await request.text()
@@ -704,6 +767,12 @@ export async function POST(request: NextRequest) {
     
     console.log('📦 Body length:', body.length)
     console.log('🔑 Has signature:', !!signature)
+    
+    // 基本的なボディ検証
+    if (!body || body.length === 0) {
+      console.error('❌ Empty request body')
+      return NextResponse.json({ error: 'Empty body' }, { status: 400 })
+    }
 
     if (!signature) {
       console.error('❌ No signature - blocking request')
@@ -719,8 +788,21 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    const events: WebhookEvent[] = JSON.parse(body).events
+    let parsedBody
+    try {
+      parsedBody = JSON.parse(body)
+    } catch (parseError) {
+      console.error('❌ Invalid JSON body:', parseError)
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    }
+    
+    const events: WebhookEvent[] = parsedBody.events || []
     console.log(`🚀 PROCESSING ${events.length} ULTIMATE EVENTS`)
+    
+    if (events.length === 0) {
+      console.log('ℹ️ No events to process')
+      return NextResponse.json({ success: true, message: 'No events' })
+    }
 
     // 限界を越えた処理
     for (const event of events) {
@@ -753,7 +835,7 @@ export async function POST(request: NextRequest) {
           console.log(`❓ Unknown event: ${event.type}`)
       }
 
-      // 限界を越えたメッセージ送信
+      // 🛡️ 完全版メッセージ送信（nullチェック付き）
       if (ultimateMessage && 'replyToken' in event && event.replyToken) {
         try {
           console.log('🚀 SENDING ULTIMATE MESSAGE...')
@@ -771,12 +853,19 @@ export async function POST(request: NextRequest) {
           console.error('🔍 Detailed error info:', {
             hasClient: !!lineClient,
             hasToken: !!LINE_CONFIG.channelAccessToken,
-            tokenStart: LINE_CONFIG.channelAccessToken.substring(0, 10),
+            tokenStart: LINE_CONFIG.channelAccessToken?.substring(0, 10) || 'NO_TOKEN',
             errorMessage: error instanceof Error ? error.message : 'Unknown error',
             replyToken: event.replyToken,
             userId: event.source.userId
           })
         }
+      } else if (ultimateMessage === null) {
+        // null の場合（重複ボタン押下など）は何もしない
+        console.log('🚫 Message skipped (null response - likely duplicate postback)')
+      } else if (!ultimateMessage) {
+        console.log('⚠️ No message to send')
+      } else if (!('replyToken' in event) || !event.replyToken) {
+        console.log('⚠️ No reply token available')
       }
     }
 
