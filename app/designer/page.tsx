@@ -3,6 +3,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 
+interface DisplaySettings {
+  layout?: 'vertical' | 'carousel'
+  buttonSize?: 'sm' | 'md' | 'lg'
+}
+
 interface SurveyStep {
   title: string
   message: string
@@ -12,6 +17,7 @@ interface SurveyStep {
     value?: string
     next?: string
   }>
+  displaySettings?: DisplaySettings
 }
 
 interface SurveyConfig {
@@ -584,6 +590,57 @@ export default function DesignerPage() {
                       >
                         + 選択肢を追加
                       </button>
+                    </div>
+
+                    {/* LINE表示設定 */}
+                    <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="text-md font-medium text-blue-800 mb-3 flex items-center gap-2">
+                        🎨 LINE表示設定
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            レイアウトスタイル
+                          </label>
+                          <select
+                            value={surveyConfig[selectedStep]?.displaySettings?.layout || 'vertical'}
+                            onChange={(e) => {
+                              const currentStep = surveyConfig[selectedStep] || {} as SurveyStep
+                              updateStep(selectedStep, 'displaySettings', {
+                                ...currentStep.displaySettings,
+                                layout: e.target.value
+                              })
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="vertical">縦並び（推奨）</option>
+                            <option value="carousel">横スクロール</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            ボタンサイズ
+                          </label>
+                          <select
+                            value={surveyConfig[selectedStep]?.displaySettings?.buttonSize || 'sm'}
+                            onChange={(e) => {
+                              const currentStep = surveyConfig[selectedStep] || {} as SurveyStep
+                              updateStep(selectedStep, 'displaySettings', {
+                                ...currentStep.displaySettings,
+                                buttonSize: e.target.value
+                              })
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="sm">小（sm）</option>
+                            <option value="md">中（md）</option>
+                            <option value="lg">大（lg）</option>
+                          </select>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        💡 縦並び: すべてのボタンが一画面に表示されます（横スクロールなし）
+                      </p>
                     </div>
 
                     <div className="space-y-3">

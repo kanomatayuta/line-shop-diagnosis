@@ -63,7 +63,11 @@ const STEP_BY_STEP_SURVEY = {
       { label: "千葉", action: "area", value: "chiba", next: "business_status" },
       { label: "神奈川", action: "area", value: "kanagawa", next: "business_status" },
       { label: "その他", action: "area", value: "other", next: "rejection_other" }
-    ]
+    ],
+    displaySettings: {
+      layout: 'vertical',
+      buttonSize: 'md'
+    }
   },
   business_status: {
     title: "経営状況",
@@ -333,12 +337,16 @@ const iosColors = {
 function createUltimateSimpleMessage(step: any): Message {
   console.log(`🎯 Creating ultra-simple message: ${step.title}`)
   
-  // 多数のボタンの場合は分割
-  if (step.buttons && step.buttons.length > 4) {
+  // 表示設定に基づくレイアウト判定
+  const displaySettings = step.displaySettings || { layout: 'vertical', buttonSize: 'sm' }
+  const useCarousel = displaySettings.layout === 'carousel' && step.buttons && step.buttons.length > 4
+  
+  if (useCarousel) {
     return createUltimateSimpleCarousel(step)
   }
   
-  // 極限までシンプルなボタン作成
+  // 表示設定を反映したボタン作成
+  const buttonHeight = displaySettings.buttonSize || 'sm'
   const buttons = step.buttons?.map((btn: any, index: number) => ({
     type: 'button',
     action: {
@@ -352,7 +360,7 @@ function createUltimateSimpleMessage(step: any): Message {
     },
     style: 'primary',
     color: '#007AFF',
-    height: 'sm'
+    height: buttonHeight
   })) || []
 
   return {

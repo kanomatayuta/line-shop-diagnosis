@@ -7,10 +7,16 @@ export interface SurveyButton {
   next?: string
 }
 
+export interface DisplaySettings {
+  layout?: 'vertical' | 'carousel'
+  buttonSize?: 'sm' | 'md' | 'lg'
+}
+
 export interface SurveyStep {
   title: string
   message: string
   buttons: SurveyButton[]
+  displaySettings?: DisplaySettings
 }
 
 export interface SurveyConfig {
