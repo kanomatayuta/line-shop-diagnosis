@@ -1,11 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getSurveyConfig, updateSurveyConfig, validateSurveyConfig } from '../../../lib/shared-config'
+// 🎯 完全版LINEアンケートツール - 共有設定ストレージ
+import { SurveyStep, SurveyConfig } from '../types/survey'
 
-// 共有ストレージから設定を取得
-const getCurrentSurveyConfig = () => getSurveyConfig()
-
-// 従来の設定（バックアップ用）
-let legacyConfig = {
+// グローバル共有ストレージ
+let globalSurveyConfig: SurveyConfig = {
   welcome: {
     title: "店舗売却LINE診断",
     message: "Goodbuyが運営する\n「店舗売却LINE診断」に\nご登録いただきありがとうございます🌼\n\nたった1分のアンケートに回答するだけで、\n店舗売却額可能額がいくらになるか診断いたします 📈\n\nまずは、以下の簡単なご質問にお答えください😊\n\n無料診断はこちら！\n※タップしてスタート",
@@ -152,62 +149,32 @@ let legacyConfig = {
   }
 }
 
-// GET: 現在の設定を取得
-export async function GET() {
-  console.log('🔍 Survey config requested')
-  const config = getCurrentSurveyConfig()
-  
-  return NextResponse.json({
-    success: true,
-    config: config,
-    stepCount: Object.keys(config).length,
+// 設定取得関数
+export function getSurveyConfig(): SurveyConfig {
+  return { ...globalSurveyConfig }
+}
+
+// 設定更新関数
+export function updateSurveyConfig(newConfig: SurveyConfig): void {
+  globalSurveyConfig = { ...newConfig }
+  console.log('📋 Survey config updated:', {
+    stepCount: Object.keys(globalSurveyConfig).length,
     timestamp: new Date().toISOString()
   })
 }
 
-// POST: 設定を更新
-export async function POST(request: NextRequest) {
-  console.log('🔄 Survey config update requested')
+// 設定検証関数
+export function validateSurveyConfig(config: any): boolean {
+  if (!config || typeof config !== 'object') return false
   
-  try {
-    const body = await request.json()
-    const { config } = body
-
-    if (!config) {
-      return NextResponse.json({
-        success: false,
-        error: 'Config is required'
-      }, { status: 400 })
-    }
-
-    // 設定を検証
-    if (!validateSurveyConfig(config)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Invalid config structure'
-      }, { status: 400 })
-    }
-
-    // 共有ストレージに設定を更新
-    updateSurveyConfig(config)
-    
-    console.log('✅ Survey config updated successfully')
-    console.log('📋 New config keys:', Object.keys(config))
-
-    return NextResponse.json({
-      success: true,
-      message: 'Survey config updated successfully',
-      config: getCurrentSurveyConfig(),
-      stepCount: Object.keys(config).length,
-      timestamp: new Date().toISOString()
-    })
-
-  } catch (error) {
-    console.error('❌ Survey config update failed:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to update survey config',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
-  }
+  const hasWelcome = 'welcome' in config
+  const hasValidSteps = Object.values(config).every((step: any) => 
+    step && 
+    typeof step === 'object' && 
+    'title' in step && 
+    'message' in step &&
+    Array.isArray(step.buttons)
+  )
+  
+  return hasWelcome && hasValidSteps
 }

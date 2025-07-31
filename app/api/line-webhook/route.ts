@@ -1,21 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Client, Message, WebhookEvent, MessageEvent, PostbackEvent, FollowEvent } from '@line/bot-sdk'
+import { getSurveyConfig } from '../../../lib/shared-config'
+import { UserSession, RateLimitInfo } from '../../../types/survey'
 
-// 動的設定の取得（ローカル関数として実装）
-async function getCurrentSurveyConfig() {
-  try {
-    // API エンドポイントから設定を取得
-    const response = await fetch(`${process.env.VERCEL_URL || 'https://line-shop-diagnosis.vercel.app'}/api/survey-config`)
-    const data = await response.json()
-    if (data.success) {
-      return data.config
-    }
-  } catch (error) {
-    console.error('Failed to fetch dynamic config:', error)
-  }
-  
-  // フォールバック設定
-  return STEP_BY_STEP_SURVEY
+// 🎯 完全版LINEアンケートツール - 設定を直接取得
+function getCurrentSurveyConfig() {
+  const config = getSurveyConfig()
+  console.log('📋 Config loaded from shared storage:', { 
+    stepCount: Object.keys(config).length,
+    timestamp: new Date().toISOString()
+  })
+  return config
 }
 
 console.log('🔥 ULTRA WEBHOOK - 限界を越えたLINE Bot')
@@ -198,15 +193,114 @@ const STEP_BY_STEP_SURVEY = {
   }
 }
 
-// ユーザー状態管理
-const userSessions = new Map<string, { currentStep: string; data: any }>()
+// 🛡️ 高度なユーザーセッション管理とレート制限
+const userSessions = new Map<string, UserSession>()
+const rateLimits = new Map<string, RateLimitInfo>()
 
-// 動的アンケート設定を取得
+// レート制限設定
+const RATE_LIMIT_WINDOW = 10000 // 10秒
+const MAX_REQUESTS_PER_WINDOW = 3 // 10秒間に3リクエストまで
+const SESSION_TIMEOUT = 30 * 60 * 1000 // 30分でセッションタイムアウト
+
+// レート制限チェック
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now()
+  const userLimit = rateLimits.get(userId)
+  
+  if (!userLimit || now > userLimit.resetTime) {
+    // 新しいウィンドウまたは期限切れ
+    rateLimits.set(userId, {
+      requests: 1,
+      resetTime: now + RATE_LIMIT_WINDOW
+    })
+    return true
+  }
+  
+  if (userLimit.requests >= MAX_REQUESTS_PER_WINDOW) {
+    console.log(`🚫 Rate limit exceeded for user ${userId}`)
+    return false
+  }
+  
+  userLimit.requests++
+  return true
+}
+
+// セッション管理
+function getOrCreateSession(userId: string): UserSession {
+  const now = Date.now()
+  let session = userSessions.get(userId)
+  
+  if (!session || (now - session.lastActivity) > SESSION_TIMEOUT) {
+    session = {
+      currentStep: 'welcome',
+      data: {},
+      lastActivity: now,
+      requestCount: 0
+    }
+    userSessions.set(userId, session)
+    console.log(`👤 New session created for user ${userId}`)
+  } else {
+    session.lastActivity = now
+    session.requestCount++
+  }
+  
+  return session
+}
+
+// 古いセッションとレート制限データをクリーンアップ
+function cleanupOldData() {
+  const now = Date.now()
+  
+  // 古いセッションを削除
+  for (const [userId, session] of userSessions.entries()) {
+    if ((now - session.lastActivity) > SESSION_TIMEOUT) {
+      userSessions.delete(userId)
+      console.log(`🗑️ Cleaned up old session for user ${userId}`)
+    }
+  }
+  
+  // 期限切れのレート制限データを削除
+  for (const [userId, limit] of rateLimits.entries()) {
+    if (now > limit.resetTime) {
+      rateLimits.delete(userId)
+    }
+  }
+}
+
+// 定期的なクリーンアップ（5分ごと）
+setInterval(cleanupOldData, 5 * 60 * 1000)
+
+// 強化された動的アンケート設定を取得
 async function getDynamicSurveyConfig() {
   try {
-    return await getCurrentSurveyConfig()
+    console.log('🔄 Fetching dynamic survey configuration...')
+    const config = await getCurrentSurveyConfig()
+    
+    if (config && typeof config === 'object') {
+      const stepCount = Object.keys(config).length
+      console.log(`✅ Dynamic config loaded successfully with ${stepCount} steps`)
+      
+      // 設定の検証
+      const hasWelcome = 'welcome' in config
+      const hasValidSteps = Object.values(config).every((step: any) => 
+        step && typeof step === 'object' && 'title' in step && 'message' in step
+      )
+      
+      if (!hasWelcome) {
+        console.warn('⚠️ Warning: No welcome step found in dynamic config')
+      }
+      
+      if (!hasValidSteps) {
+        console.warn('⚠️ Warning: Some steps in dynamic config are invalid')
+      }
+      
+      return config
+    }
+    
+    throw new Error('Invalid config structure')
   } catch (error) {
     console.error('❌ Failed to get dynamic config, using fallback:', error)
+    console.log('🔄 Fallback config has', Object.keys(STEP_BY_STEP_SURVEY).length, 'steps')
     return STEP_BY_STEP_SURVEY
   }
 }
@@ -235,128 +329,66 @@ const iosColors = {
   tertiaryBackground: '#FFFFFF',
 }
 
-// 高度なiOS風フレックスメッセージ作成
-function createUltimateFlexMessage(step: any): Message {
-  console.log(`🎨 Creating advanced iOS-style flex for: ${step.title}`)
+// 🌟 限界を越えたシンプル美学メッセージ作成
+function createUltimateSimpleMessage(step: any): Message {
+  console.log(`🎯 Creating ultra-simple message: ${step.title}`)
   
-  // 5つ以上のボタンがある場合はカルーセル形式にする
-  if (step.buttons && step.buttons.length >= 5) {
-    return createCarouselMessage(step)
+  // 多数のボタンの場合は分割
+  if (step.buttons && step.buttons.length > 4) {
+    return createUltimateSimpleCarousel(step)
   }
   
-  // 高度なiOS風ボタン作成（新しいスタイル）
-  const createAdvancedIOSButton = (btn: any, index: number, total: number) => {
-    const isPrimary = index === 0
-    const isSecondary = index === 1
-    
-    return {
-      type: 'box',
-      layout: 'vertical',
-      contents: [
-        {
-          type: 'button',
-          action: {
-            type: 'postback',
-            label: btn.label,
-            data: JSON.stringify({
-              action: btn.action,
-              value: btn.value || '',
-              next: btn.next || ''
-            })
-          },
-          style: isPrimary ? 'primary' : 'secondary',
-          color: isPrimary ? iosColors.primary : (isSecondary ? iosColors.systemBlue : iosColors.systemGray3),
-          height: 'md',
-          gravity: 'center'
-        }
-      ],
-      margin: index === 0 ? 'none' : 'sm',
-      cornerRadius: '12px',
-      backgroundColor: isPrimary ? iosColors.primary : 
-                      isSecondary ? iosColors.systemBlue + '10' : 
-                      iosColors.systemGray6,
-      paddingAll: '2px'
-    }
-  }
-
-  const buttons = step.buttons?.map((btn: any, index: number) => 
-    createAdvancedIOSButton(btn, index, step.buttons.length)
-  ) || []
-
-  // アイコンの選択ロジック
-  const getStepIcon = (title: string) => {
-    if (title.includes('診断結果')) return '📊'
-    if (title.includes('エリア')) return '📍'
-    if (title.includes('経営')) return '💼'
-    if (title.includes('営業利益')) return '💰'
-    if (title.includes('階数')) return '🏢'
-    if (title.includes('商業施設')) return '🏪'
-    if (title.includes('固定資産')) return '📦'
-    if (title.includes('従業員')) return '👥'
-    if (title.includes('相談')) return '📞'
-    if (title.includes('お断り')) return '💭'
-    return '🌟'
-  }
+  // 極限までシンプルなボタン作成
+  const buttons = step.buttons?.map((btn: any, index: number) => ({
+    type: 'button',
+    action: {
+      type: 'postback',
+      label: btn.label,
+      data: JSON.stringify({
+        action: btn.action,
+        value: btn.value || '',
+        next: btn.next || ''
+      })
+    },
+    style: 'primary',
+    color: '#007AFF',
+    height: 'sm'
+  })) || []
 
   return {
     type: 'flex',
     altText: step.title,
     contents: {
       type: 'bubble',
-      size: 'giga',
-      header: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
-          {
-            type: 'box',
-            layout: 'horizontal',
-            contents: [
-              {
-                type: 'text',
-                text: getStepIcon(step.title),
-                size: 'xl',
-                weight: 'bold',
-                color: '#FFFFFF',
-                flex: 0,
-                margin: 'none'
-              },
-              {
-                type: 'text',
-                text: step.title,
-                weight: 'bold',
-                size: 'lg',
-                color: '#FFFFFF',
-                wrap: true,
-                flex: 1,
-                margin: 'md',
-                gravity: 'center'
-              }
-            ],
-            spacing: 'sm'
-          }
-        ],
-        backgroundColor: iosColors.primary,
-        paddingAll: '20px',
-        cornerRadius: '20px'
-      },
+      size: 'kilo',
       body: {
         type: 'box',
         layout: 'vertical',
         contents: [
           {
             type: 'text',
+            text: step.title,
+            weight: 'bold',
+            size: 'lg',
+            color: '#000000',
+            margin: 'none'
+          },
+          {
+            type: 'separator',
+            margin: 'md'
+          },
+          {
+            type: 'text',
             text: step.message,
             wrap: true,
             size: 'md',
-            color: iosColors.label,
-            lineSpacing: '6px',
-            margin: 'none'
+            color: '#333333',
+            margin: 'md',
+            lineSpacing: '6px'
           }
         ],
         paddingAll: '20px',
-        backgroundColor: iosColors.background,
-        spacing: 'none'
+        backgroundColor: '#FFFFFF'
       },
       footer: buttons.length > 0 ? {
         type: 'box',
@@ -364,151 +396,89 @@ function createUltimateFlexMessage(step: any): Message {
         contents: buttons,
         spacing: 'sm',
         paddingAll: '20px',
-        backgroundColor: iosColors.background
+        backgroundColor: '#FFFFFF'
       } : undefined,
       styles: {
-        header: {
-          separator: false
-        },
-        body: {
-          separator: false
-        },
-        footer: {
-          separator: false
-        }
+        body: { separator: false },
+        footer: { separator: false }
       }
     }
   }
 }
 
-// 高度なカルーセル形式のメッセージ作成（5つ以上のボタン用）
-function createCarouselMessage(step: any): Message {
+// 🎯 極限シンプルカルーセル（多数のボタン用）
+function createUltimateSimpleCarousel(step: any): Message {
   const buttonsPerCard = 2
   const cards = []
   
-  // アイコンの選択ロジック
-  const getStepIcon = (title: string) => {
-    if (title.includes('診断結果')) return '📊'
-    if (title.includes('エリア')) return '📍'
-    if (title.includes('経営')) return '💼'
-    if (title.includes('営業利益')) return '💰'
-    if (title.includes('階数')) return '🏢'
-    if (title.includes('商業施設')) return '🏪'
-    if (title.includes('固定資産')) return '📦'
-    if (title.includes('従業員')) return '👥'
-    if (title.includes('相談')) return '📞'
-    if (title.includes('お断り')) return '💭'
-    return '🌟'
-  }
-  
   for (let i = 0; i < step.buttons.length; i += buttonsPerCard) {
-    const cardButtons = step.buttons.slice(i, i + buttonsPerCard).map((btn: any, btnIndex: number) => ({
-      type: 'box',
-      layout: 'vertical',
-      contents: [
-        {
-          type: 'button',
-          action: {
-            type: 'postback',
-            label: btn.label,
-            data: JSON.stringify({
-              action: btn.action,
-              value: btn.value || '',
-              next: btn.next || ''
-            })
-          },
-          style: 'primary',
-          color: btnIndex === 0 ? iosColors.primary : iosColors.systemBlue,
-          height: 'md',
-          gravity: 'center'
-        }
-      ],
-      margin: btnIndex === 0 ? 'none' : 'sm',
-      cornerRadius: '12px',
-      backgroundColor: btnIndex === 0 ? iosColors.primary + '15' : iosColors.systemBlue + '15',
-      paddingAll: '2px'
+    const cardButtons = step.buttons.slice(i, i + buttonsPerCard).map((btn: any) => ({
+      type: 'button',
+      action: {
+        type: 'postback',
+        label: btn.label,
+        data: JSON.stringify({
+          action: btn.action,
+          value: btn.value || '',
+          next: btn.next || ''
+        })
+      },
+      style: 'primary',
+      color: '#007AFF',
+      height: 'sm'
     }))
 
     cards.push({
       type: 'bubble',
       size: 'micro',
-      header: {
+      body: {
         type: 'box',
         layout: 'vertical',
         contents: [
-          {
-            type: 'box',
-            layout: 'horizontal',
-            contents: [
-              {
-                type: 'text',
-                text: getStepIcon(step.title),
-                size: 'lg',
-                weight: 'bold',
-                color: '#FFFFFF',
-                flex: 0,
-                margin: 'none'
-              },
-              {
-                type: 'text',
-                text: i === 0 ? step.title : `選択肢 ${Math.floor(i/buttonsPerCard) + 1}`,
-                weight: 'bold',
-                size: 'md',
-                color: '#FFFFFF',
-                wrap: true,
-                flex: 1,
-                margin: 'sm',
-                gravity: 'center'
-              }
-            ],
-            spacing: 'sm'
-          }
+          ...(i === 0 ? [
+            {
+              type: 'text',
+              text: step.title,
+              weight: 'bold',
+              size: 'md',
+              color: '#000000',
+              margin: 'none'
+            },
+            {
+              type: 'separator',
+              margin: 'sm'
+            },
+            {
+              type: 'text',
+              text: step.message,
+              wrap: true,
+              size: 'sm',
+              color: '#333333',
+              margin: 'sm'
+            }
+          ] : [
+            {
+              type: 'text',
+              text: '選択してください',
+              weight: 'bold',
+              size: 'md',
+              color: '#000000',
+              align: 'center'
+            }
+          ])
         ],
-        backgroundColor: iosColors.primary,
         paddingAll: '16px',
-        cornerRadius: '16px'
-      },
-      body: i === 0 ? {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
-          {
-            type: 'text',
-            text: step.message,
-            wrap: true,
-            size: 'sm',
-            color: iosColors.label,
-            lineSpacing: '5px'
-          }
-        ],
-        paddingAll: '14px',
-        backgroundColor: iosColors.background
-      } : {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
-          {
-            type: 'text',
-            text: '以下から選択してください',
-            wrap: true,
-            size: 'sm',
-            color: iosColors.systemGray,
-            align: 'center'
-          }
-        ],
-        paddingAll: '14px',
-        backgroundColor: iosColors.background
+        backgroundColor: '#FFFFFF'
       },
       footer: {
         type: 'box',
         layout: 'vertical',
         contents: cardButtons,
         spacing: 'sm',
-        paddingAll: '14px',
-        backgroundColor: iosColors.background
+        paddingAll: '16px',
+        backgroundColor: '#FFFFFF'
       },
       styles: {
-        header: { separator: false },
         body: { separator: false },
         footer: { separator: false }
       }
@@ -525,16 +495,26 @@ function createCarouselMessage(step: any): Message {
   }
 }
 
-// 究極のメッセージ処理
-async function handleUltimateMessage(event: MessageEvent): Promise<Message> {
+// 🎯 完全版メッセージ処理（レート制限付き）
+async function handleCompleteMessage(event: MessageEvent): Promise<Message | null> {
   const userId = event.source.userId!
   const text = event.message.type === 'text' ? event.message.text : ''
   
-  console.log(`🔥 ULTIMATE MESSAGE from ${userId}: ${text}`)
+  console.log(`📨 Message from ${userId}: ${text}`)
+  
+  // レート制限チェック
+  if (!checkRateLimit(userId)) {
+    return {
+      type: 'text',
+      text: '⏰ 少し間をおいてから再度お試しください。\n\n連続でのご利用を制限させていただいております。'
+    }
+  }
 
+  // セッション取得または作成
+  const session = getOrCreateSession(userId)
+  
   // スタート系のワード（無料診断も追加）
-  if (!userSessions.has(userId) || 
-      text.includes('スタート') || 
+  if (text.includes('スタート') || 
       text.includes('開始') ||
       text.includes('はじめ') ||
       text.includes('診断') ||
@@ -543,90 +523,157 @@ async function handleUltimateMessage(event: MessageEvent): Promise<Message> {
       text.includes('START') ||
       text.includes('start')) {
     
-    console.log(`🚀 ULTIMATE START for ${userId} with trigger: ${text}`)
-    const dynamicConfig = await getDynamicSurveyConfig()
-    userSessions.set(userId, { currentStep: 'welcome', data: {} })
-    return createUltimateFlexMessage(dynamicConfig.welcome)
+    console.log(`🚀 Starting survey for ${userId} with trigger: ${text}`)
+    const config = getCurrentSurveyConfig()
+    session.currentStep = 'welcome'
+    session.data = {}
+    return createUltimateSimpleMessage(config.welcome)
   }
 
-  // 現在の状態を確認
-  const session = userSessions.get(userId)
-  if (session?.currentStep) {
-    const dynamicConfig = await getDynamicSurveyConfig()
-    const currentStep = dynamicConfig[session.currentStep as keyof typeof dynamicConfig]
-    if (currentStep) {
-      return createUltimateFlexMessage(currentStep)
-    }
+  // 現在のステップを継続
+  const config = getCurrentSurveyConfig()
+  const currentStep = config[session.currentStep]
+  if (currentStep) {
+    return createUltimateSimpleMessage(currentStep)
   }
 
-  // デフォルト
+  // 🎯 極限シンプルなデフォルトメッセージ
   return {
-    type: 'text',
-    text: '🚀 限界を越えた診断を開始するには\n「スタート」または「無料診断」と送信してください！\n\n✨ 究極の分析をお届けします\n\n📱 キーワード例:\n・スタート\n・無料診断\n・診断\n・開始'
+    type: 'flex',
+    altText: '店舗売却診断',
+    contents: {
+      type: 'bubble',
+      size: 'kilo',
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '店舗売却診断',
+            weight: 'bold',
+            size: 'lg',
+            color: '#000000',
+            margin: 'none'
+          },
+          {
+            type: 'separator',
+            margin: 'md'
+          },
+          {
+            type: 'text',
+            text: 'たった1分で店舗の売却可能額を診断します。\n\n以下のボタンから開始してください。',
+            wrap: true,
+            size: 'md',
+            color: '#333333',
+            margin: 'md',
+            lineSpacing: '6px'
+          }
+        ],
+        paddingAll: '20px',
+        backgroundColor: '#FFFFFF'
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'button',
+            action: {
+              type: 'postback',
+              label: '診断を開始する',
+              data: JSON.stringify({
+                action: 'start',
+                value: 'start',
+                next: 'welcome'
+              })
+            },
+            style: 'primary',
+            color: '#007AFF',
+            height: 'sm'
+          }
+        ],
+        spacing: 'sm',
+        paddingAll: '20px',
+        backgroundColor: '#FFFFFF'
+      },
+      styles: {
+        body: { separator: false },
+        footer: { separator: false }
+      }
+    }
   }
 }
 
-// 究極のポストバック処理
-async function handleUltimatePostback(event: PostbackEvent): Promise<Message> {
+// 🎯 完全版ポストバック処理（レート制限付き）
+async function handleCompletePostback(event: PostbackEvent): Promise<Message | null> {
   const userId = event.source.userId!
   
-  console.log(`🔘 ULTIMATE POSTBACK from ${userId}: ${event.postback.data}`)
+  console.log(`🔘 Postback from ${userId}: ${event.postback.data}`)
+  
+  // レート制限チェック
+  if (!checkRateLimit(userId)) {
+    return {
+      type: 'text',
+      text: '⏰ 少し間をおいてから再度お試しください。\n\n連続でのご利用を制限させていただいております。'
+    }
+  }
   
   try {
     const data = JSON.parse(event.postback.data)
     const { action, value, next } = data
+    
+    // セッション取得または作成
+    const session = getOrCreateSession(userId)
 
     // 回答データを保存して次のステップに進む
     if (next) {
-      const dynamicConfig = await getDynamicSurveyConfig()
-      const nextStep = dynamicConfig[next as keyof typeof dynamicConfig]
+      const config = getCurrentSurveyConfig()
+      const nextStep = config[next]
       
       if (nextStep) {
-        console.log(`➡️ ULTIMATE MOVE to: ${next}`)
-        
-        // 現在のセッションデータを取得
-        const currentSession = userSessions.get(userId) || { currentStep: '', data: {} }
+        console.log(`➡️ Moving to step: ${next}`)
         
         // 回答データを保存
-        const updatedData = { ...currentSession.data }
         if (action && value) {
-          updatedData[action] = value
+          session.data[action] = value
         }
         
-        userSessions.set(userId, { currentStep: next, data: updatedData })
-        return createUltimateFlexMessage(nextStep)
+        session.currentStep = next
+        return createUltimateSimpleMessage(nextStep)
       }
     }
 
     // 特別なアクション
     switch (action) {
       case 'restart':
-        const dynamicConfig = await getDynamicSurveyConfig()
-        userSessions.set(userId, { currentStep: 'welcome', data: {} })
-        return createUltimateFlexMessage(dynamicConfig.welcome)
+        const config = getCurrentSurveyConfig()
+        session.currentStep = 'welcome'
+        session.data = {}
+        return createUltimateSimpleMessage(config.welcome)
       
       case 'report':
-        const userData = userSessions.get(userId)?.data || {}
         return {
           type: 'text',
-          text: `📊 詳細診断レポート\n\n✨ あなたの回答結果：\n📍 エリア: ${userData.area || '未回答'}\n💼 経営状況: ${userData.business_status || '未回答'}\n💰 営業利益: ${userData.annual_profit || '未回答'}\n🏢 階数: ${userData.floor_level || '未回答'}\n🏪 商業施設: ${userData.commercial_facility || '未回答'}\n📦 固定資産: ${userData.fixed_assets || '未回答'}\n👥 従業員: ${userData.employees || '未回答'}\n\n🔥 店舗売却の専門家が分析中...\n\n🔄 再診断は「診断開始」で！`
+          text: `📊 診断レポート\n\n✨ 回答結果：\n📍 エリア: ${session.data.area || '未回答'}\n💼 経営状況: ${session.data.business_status || '未回答'}\n💰 営業利益: ${session.data.annual_profit || '未回答'}\n🏢 階数: ${session.data.floor_level || '未回答'}\n🏪 商業施設: ${session.data.commercial_facility || '未回答'}\n📦 固定資産: ${session.data.fixed_assets || '未回答'}\n👥 従業員: ${session.data.employees || '未回答'}\n\n🔄 再診断は「診断開始」で！`
         }
       
       case 'consultation':
         return {
           type: 'text',
-          text: `💬 個別相談お申し込みありがとうございます！\n\n📋 診断結果を基に、専門スタッフが\n🎯 あなたに最適なプランをご提案します\n\n📞 近日中にご連絡させていただきます\n\n✨ より詳しい分析をお待ちください！`
+          text: `💬 個別相談のお申し込みありがとうございます！\n\n📋 診断結果を基に専門スタッフがご提案いたします。\n📞 近日中にご連絡させていただきます。`
         }
       
       case 'start':
-        const startConfig = await getDynamicSurveyConfig()
-        userSessions.set(userId, { currentStep: 'area', data: {} })
-        return createUltimateFlexMessage(startConfig.area)
+        const startConfig = getCurrentSurveyConfig()
+        session.currentStep = 'area'
+        session.data = {}
+        return createUltimateSimpleMessage(startConfig.area)
       
       default:
         return {
           type: 'text',
-          text: `✅ 回答記録完了！\n\n📝 ${action}: ${value}\n\n🔥 限界を越えた分析を実行中...\n\n🚀 続行は「スタート」または「無料診断」で！`
+          text: `✅ 回答を記録しました\n\n📝 ${action}: ${value}\n\n続行は「スタート」で！`
         }
     }
   } catch (error) {
@@ -675,21 +722,23 @@ export async function POST(request: NextRequest) {
 
       switch (event.type) {
         case 'message':
-          console.log('💬 ULTIMATE MESSAGE EVENT')
-          ultimateMessage = await handleUltimateMessage(event as MessageEvent)
+          console.log('💬 Message event')
+          ultimateMessage = await handleCompleteMessage(event as MessageEvent)
           break
         
         case 'postback':
-          console.log('🔘 ULTIMATE POSTBACK EVENT')
-          ultimateMessage = await handleUltimatePostback(event as PostbackEvent)
+          console.log('🔘 Postback event')
+          ultimateMessage = await handleCompletePostback(event as PostbackEvent)
           break
         
         case 'follow':
-          console.log('👋 ULTIMATE FOLLOW EVENT - AUTO SURVEY!')
+          console.log('👋 Follow event - Starting survey')
           const userId = event.source.userId!
-          const followConfig = await getDynamicSurveyConfig()
-          userSessions.set(userId, { currentStep: 'welcome', data: {} })
-          ultimateMessage = createUltimateFlexMessage(followConfig.welcome)
+          const session = getOrCreateSession(userId)
+          const config = getCurrentSurveyConfig()
+          session.currentStep = 'welcome'
+          session.data = {}
+          ultimateMessage = createUltimateSimpleMessage(config.welcome)
           break
           
         default:

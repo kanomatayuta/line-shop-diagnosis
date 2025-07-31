@@ -98,3 +98,106 @@ $RECYCLE.BIN/
 test-*.js
 old-*.js
 backup-*.js
+
+# ==========================================
+# 🔒 SECURITY - CRITICAL FILES
+# ==========================================
+# Never commit these files!
+.env.*
+secrets/
+keys/
+certs/
+private/
+credentials/
+tokens/
+auth/
+
+# Security logs and sensitive data
+security.log
+incident-*.log
+threat-*.log
+audit-*.log
+
+# Encryption keys and certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.jks
+
+# Database dumps and backups
+*.sql
+*.dump
+*.backup
+*.db
+dump.rdb
+
+# Configuration with secrets
+config.production.json
+config.staging.json
+local-config.*
+
+# ==========================================
+# 📊 MONITORING & LOGS
+# ==========================================
+# Application logs
+logs/
+*.log
+log-*.txt
+monitoring/
+metrics/
+
+# Error tracking
+errors/
+crashes/
+traces/
+
+# Performance data
+perf/
+benchmarks/
+profiling/
+
+# ==========================================
+# 🚀 DEPLOYMENT & BUILD
+# ==========================================
+# Build artifacts
+.next/
+dist/
+build/
+out/
+
+# Cache directories
+.cache/
+.npm/
+.yarn/
+.pnpm/
+
+# Runtime files
+.pid
+.lock
+
+# ==========================================
+# 🔧 DEVELOPMENT
+# ==========================================
+# IDE and editor files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test coverage
+coverage/
+.nyc_output/
+junit.xml
+
+# Temporary files
+tmp/
+temp/
+.tmp/
