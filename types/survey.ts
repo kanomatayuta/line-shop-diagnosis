@@ -25,11 +25,13 @@ export interface SurveyConfig {
 }
 
 export interface UserSession {
+  userId: string
   currentStep: string
   data: Record<string, any>
   lastActivity: number
   requestCount: number
   userName?: string
+  sessionId?: string
 }
 
 export interface RateLimitInfo {

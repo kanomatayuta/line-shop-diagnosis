@@ -3,6 +3,11 @@ import { Client, Message, WebhookEvent, MessageEvent, PostbackEvent, FollowEvent
 import { getSurveyConfig } from '../../../lib/shared-config'
 import { UserSession, RateLimitInfo } from '../../../types/survey'
 import { recordRequest, recordMessage } from '../../../lib/stats-manager'
+import { 
+  startUserJourney, 
+  recordSurveyResponse, 
+  completeUserJourney 
+} from '../../../lib/analytics-manager'
 
 // 🎯 完全版LINEアンケートツール - 設定を直接取得
 function getCurrentSurveyConfig() {
@@ -240,6 +245,7 @@ function getOrCreateSession(userId: string): UserSession {
   
   if (!session || (now - session.lastActivity) > SESSION_TIMEOUT) {
     session = {
+      userId,
       currentStep: 'welcome',
       data: {},
       lastActivity: now,
@@ -248,6 +254,7 @@ function getOrCreateSession(userId: string): UserSession {
     userSessions.set(userId, session)
     console.log(`🆕 New session created for user ${userId}`)
   } else {
+    session.userId = userId // 確実にuserIdを設定
     session.lastActivity = now
     session.requestCount = (session.requestCount || 0) + 1
     
@@ -825,6 +832,26 @@ async function handleCompletePostback(event: PostbackEvent): Promise<Message | n
           session.data[action] = value
         }
         
+        // アナリティクス：回答記録
+        if (session.sessionId) {
+          const currentStepConfig = config[session.currentStep]
+          recordSurveyResponse({
+            userId: session.userId,
+            userName: session.userName,
+            step: session.currentStep,
+            question: currentStepConfig?.title || session.currentStep,
+            answer: getCurrentStepAnswer(action, value, config[session.currentStep]),
+            answerValue: value || '',
+            nextStep: next,
+            sessionId: session.sessionId
+          })
+          
+          // ジャーニー完了チェック
+          if (next.startsWith('result_') || next.startsWith('consultation_') || next === 'consultation_no') {
+            completeUserJourney(session.sessionId, next)
+          }
+        }
+        
         session.currentStep = next
         return createUltimateSimpleMessage(nextStep, session.userName)
       }
@@ -869,6 +896,17 @@ async function handleCompletePostback(event: PostbackEvent): Promise<Message | n
       text: '⚡ エラーが発生しました\n「スタート」または「無料診断」で再開してください！'
     }
   }
+}
+
+// 回答テキスト生成ヘルパー
+function getCurrentStepAnswer(action: string, value: string, stepConfig: any): string {
+  if (!stepConfig || !stepConfig.buttons) return value || ''
+  
+  const button = stepConfig.buttons.find((btn: any) => 
+    btn.action === action && btn.value === value
+  )
+  
+  return button ? button.label : value || ''
 }
 
 // 究極のWebhook処理
@@ -947,6 +985,11 @@ export async function POST(request: NextRequest) {
           // ユーザー名を取得
           session.userName = await getUserProfile(userId)
           console.log(`📝 User name stored: ${session.userName}`)
+          
+          // アナリティクス：ユーザージャーニー開始
+          const sessionId = `${userId}_${Date.now()}`
+          startUserJourney(userId, session.userName, sessionId)
+          session.sessionId = sessionId
           
           const config = getCurrentSurveyConfig()
           session.currentStep = 'welcome'

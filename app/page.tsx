@@ -356,7 +356,7 @@ export default function Dashboard() {
 
         {/* Action Cards */}
         <motion.section 
-          className="grid grid-cols-1 md:grid-cols-2 gap-8"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
@@ -412,6 +412,34 @@ export default function Dashboard() {
                 <div className="flex items-center justify-center gap-2">
                   エンジン管理
                   <Settings className="w-4 h-4" />
+                </div>
+              </motion.button>
+            </Link>
+          </div>
+
+          <div className="card-ios p-8">
+            <div className="flex items-start gap-4 mb-6">
+              <div className="p-3 bg-ios-purple/10 rounded-ios-md">
+                <BarChart3 className="w-8 h-8 text-ios-purple" />
+              </div>
+              <div>
+                <h2 className="text-ios-title-3 font-semibold mb-2 text-gray-900 dark:text-white">
+                  📊 高度なアナリティクス
+                </h2>
+                <p className="text-ios-subhead text-gray-600 dark:text-gray-400">
+                  アンケート回答結果の詳細分析
+                </p>
+              </div>
+            </div>
+            <Link href="/analytics">
+              <motion.button 
+                className="btn-ios bg-ios-purple text-white hover:bg-ios-purple/90 w-full"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  分析を開く
+                  <Eye className="w-4 h-4" />
                 </div>
               </motion.button>
             </Link>
