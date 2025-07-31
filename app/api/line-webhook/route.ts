@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Client, Message, WebhookEvent, MessageEvent, PostbackEvent, FollowEvent } from '@line/bot-sdk'
 import { getSurveyConfig } from '../../../lib/shared-config'
 import { UserSession, RateLimitInfo } from '../../../types/survey'
+import { recordRequest, recordMessage } from '../stats/route'
 
 // 🎯 完全版LINEアンケートツール - 設定を直接取得
 function getCurrentSurveyConfig() {
@@ -872,6 +873,7 @@ async function handleCompletePostback(event: PostbackEvent): Promise<Message | n
 
 // 究極のWebhook処理
 export async function POST(request: NextRequest) {
+  const startTime = Date.now()
   console.log('🔥 ULTIMATE WEBHOOK TRIGGERED!')
   console.log('🎯 Time:', new Date().toISOString())
   console.log('🌐 Request URL:', request.url)
@@ -966,6 +968,9 @@ export async function POST(request: NextRequest) {
           
           await lineClient.replyMessage(event.replyToken, ultimateMessage)
           
+          // 統計記録
+          recordMessage()
+          
           console.log('✅ ULTIMATE MESSAGE SENT SUCCESSFULLY!')
           console.log('🎊 Message delivered to user:', event.source.userId)
           
@@ -990,6 +995,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // リクエスト処理完了の統計記録
+    const endTime = Date.now()
+    const responseTime = endTime - startTime
+    const userId = events.length > 0 && 'source' in events[0] ? events[0].source.userId : undefined
+    recordRequest(responseTime, true, userId)
+
     return NextResponse.json({
       success: true,
       processed: events.length,
@@ -998,6 +1009,11 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
+    // エラー時も統計記録
+    const endTime = Date.now()
+    const responseTime = endTime - startTime
+    recordRequest(responseTime, false)
+    
     console.error('🚨 ULTIMATE WEBHOOK ERROR:', error)
     return NextResponse.json({
       error: 'Ultimate webhook error',

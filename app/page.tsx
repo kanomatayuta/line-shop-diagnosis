@@ -53,19 +53,36 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    // 統計データの更新
-    const interval = setInterval(() => {
-      setStats(prev => ({
-        flowCount: Math.floor(Math.random() * 5) + 10,
-        responseTime: (Math.random() * 0.3 + 0.1).toFixed(1) + 'ms',
-        uptime: (99.8 + Math.random() * 0.2).toFixed(1) + '%',
-        activeUsers: prev.activeUsers + Math.floor(Math.random() * 10) - 5,
-        totalMessages: prev.totalMessages + Math.floor(Math.random() * 50) + 10,
-        successRate: (99.5 + Math.random() * 0.5).toFixed(1) + '%',
-        memoryUsage: (40 + Math.random() * 20).toFixed(0) + '%',
-        cpuUsage: (10 + Math.random() * 20).toFixed(0) + '%'
-      }))
-    }, 5000)
+    // 実際の統計データを取得
+    const fetchRealStats = async () => {
+      try {
+        const response = await fetch('/api/stats')
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success) {
+            setStats({
+              flowCount: result.data.flowCount,
+              responseTime: result.data.responseTime,
+              uptime: result.data.uptime,
+              activeUsers: result.data.activeUsers,
+              totalMessages: result.data.totalMessages,
+              successRate: result.data.successRate,
+              memoryUsage: result.data.memoryUsage,
+              cpuUsage: result.data.cpuUsage
+            })
+          }
+        }
+      } catch (error) {
+        console.error('📊 Failed to fetch real stats:', error)
+        // フォールバック: 基本的な値を維持
+      }
+    }
+
+    // 初回読み込み
+    fetchRealStats()
+    
+    // 10秒ごとに実データを更新
+    const interval = setInterval(fetchRealStats, 10000)
 
     return () => clearInterval(interval)
   }, [])
