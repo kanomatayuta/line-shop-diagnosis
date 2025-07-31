@@ -183,7 +183,7 @@ class LRUCache<T> {
     const keysToDelete: string[] = []
     
     // 期限切れエントリーを収集
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (now - entry.timestamp > entry.ttl) {
         keysToDelete.push(key)
       }
@@ -264,7 +264,7 @@ function memoize<T extends (...args: any[]) => any>(
         return result.then((resolvedResult) => {
           cache.set(key, resolvedResult, ttl)
           return resolvedResult
-        })
+        }) as ReturnType<T>
       } else {
         cache.set(key, result, ttl)
         return result
@@ -309,7 +309,7 @@ class CacheManager {
   }
   
   clearAllCaches(): void {
-    for (const [name, cache] of this.caches.entries()) {
+    for (const [name, cache] of Array.from(this.caches.entries())) {
       cache.clear()
       logger.info('Cache cleared', { name })
     }
@@ -317,14 +317,14 @@ class CacheManager {
   
   getAllStats() {
     const stats: Record<string, any> = {}
-    for (const [name, cache] of this.caches.entries()) {
+    for (const [name, cache] of Array.from(this.caches.entries())) {
       stats[name] = cache.getStats()
     }
     return stats
   }
   
   optimizeAll(): void {
-    for (const [name, cache] of this.caches.entries()) {
+    for (const [name, cache] of Array.from(this.caches.entries())) {
       const stats = cache.getStats()
       
       // ヒット率が低い場合は警告

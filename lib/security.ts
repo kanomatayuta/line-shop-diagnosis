@@ -73,27 +73,21 @@ class EncryptionManager {
     
     const iv = crypto.randomBytes(SECURITY_CONFIG.IV_LENGTH)
     const cipher = crypto.createCipher(SECURITY_CONFIG.ENCRYPTION_ALGORITHM, key)
-    cipher.setAAD(Buffer.from('LINE_SURVEY_TOOL', 'utf8'))
     
     let encrypted = cipher.update(data, 'utf8', 'hex')
     encrypted += cipher.final('hex')
     
-    const tag = cipher.getAuthTag()
-    
-    return `${iv.toString('hex')}:${tag.toString('hex')}:${encrypted}`
+    return `${iv.toString('hex')}:${encrypted}`
   }
   
   decrypt(encryptedData: string, keyType: 'master' | 'session' = 'master'): string {
     const key = this.keys.get(keyType)
     if (!key) throw new Error('Decryption key not found')
     
-    const [ivHex, tagHex, encrypted] = encryptedData.split(':')
+    const [ivHex, encrypted] = encryptedData.split(':')
     const iv = Buffer.from(ivHex, 'hex')
-    const tag = Buffer.from(tagHex, 'hex')
     
     const decipher = crypto.createDecipher(SECURITY_CONFIG.ENCRYPTION_ALGORITHM, key)
-    decipher.setAAD(Buffer.from('LINE_SURVEY_TOOL', 'utf8'))
-    decipher.setAuthTag(tag)
     
     let decrypted = decipher.update(encrypted, 'hex', 'utf8')
     decrypted += decipher.final('utf8')
@@ -220,14 +214,14 @@ class SecurityGuard {
     const now = Date.now()
     
     // 期限切れのレート制限データを削除
-    for (const [identifier, limit] of this.rateLimits.entries()) {
+    for (const [identifier, limit] of Array.from(this.rateLimits.entries())) {
       if (now > limit.resetTime && now > limit.blockUntil) {
         this.rateLimits.delete(identifier)
       }
     }
     
     // 古い疑わしいIPデータを削除
-    for (const [ip, data] of this.suspiciousIPs.entries()) {
+    for (const [ip, data] of Array.from(this.suspiciousIPs.entries())) {
       if (now - data.lastSeen > 24 * 60 * 60 * 1000) { // 24時間
         this.suspiciousIPs.delete(ip)
       }
@@ -356,7 +350,7 @@ class SecureSessionManager {
     const now = Date.now()
     let cleaned = 0
     
-    for (const [sessionId, session] of this.sessions.entries()) {
+    for (const [sessionId, session] of Array.from(this.sessions.entries())) {
       if (now - session.lastAccess > SECURITY_CONFIG.SESSION.MAX_AGE) {
         this.sessions.delete(sessionId)
         cleaned++

@@ -252,7 +252,7 @@ function cleanupOldData() {
   const now = Date.now()
   
   // 古いセッションを削除
-  for (const [userId, session] of userSessions.entries()) {
+  for (const [userId, session] of Array.from(userSessions.entries())) {
     if ((now - session.lastActivity) > SESSION_TIMEOUT) {
       userSessions.delete(userId)
       console.log(`🗑️ Cleaned up old session for user ${userId}`)
@@ -260,7 +260,7 @@ function cleanupOldData() {
   }
   
   // 期限切れのレート制限データを削除
-  for (const [userId, limit] of rateLimits.entries()) {
+  for (const [userId, limit] of Array.from(rateLimits.entries())) {
     if (now > limit.resetTime) {
       rateLimits.delete(userId)
     }

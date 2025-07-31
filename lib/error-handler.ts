@@ -277,7 +277,8 @@ class GlobalErrorHandler {
     })
     
     // シグナルハンドリング
-    ['SIGTERM', 'SIGINT'].forEach((signal) => {
+    const signals = ['SIGTERM', 'SIGINT']
+    signals.forEach((signal) => {
       process.on(signal, () => {
         logger.info(`Received ${signal}, starting graceful shutdown`)
         this.gracefulShutdown(0)
@@ -494,7 +495,7 @@ class GlobalErrorHandler {
   getErrorStats() {
     const stats = new Map<string, { count: number; lastOccurrence: Date }>()
     
-    for (const [key, count] of this.errorCounts.entries()) {
+    for (const [key, count] of Array.from(this.errorCounts.entries())) {
       const lastTime = this.lastErrorTime.get(key)
       if (lastTime) {
         stats.set(key, { count, lastOccurrence: lastTime })
@@ -552,7 +553,7 @@ export function Retry(maxRetries: number = 3, baseDelay: number = 1000) {
   }
 }
 
-export function CircuitBreaker(service: string) {
+export function CircuitBreakerDecorator(service: string) {
   return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
     const method = descriptor.value
     const breaker = errorHandler.getCircuitBreaker(service)

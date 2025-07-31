@@ -462,7 +462,7 @@ class PerformanceTracker {
   
   start(trackingId: string, metadata?: any) {
     this.activeTracking.set(trackingId, {
-      start: performance.now(),
+      start: Date.now(),
       metadata
     })
   }
@@ -471,7 +471,7 @@ class PerformanceTracker {
     const tracking = this.activeTracking.get(trackingId)
     if (!tracking) return null
     
-    const duration = performance.now() - tracking.start
+    const duration = Date.now() - tracking.start
     this.activeTracking.delete(trackingId)
     
     // メトリクス記録
