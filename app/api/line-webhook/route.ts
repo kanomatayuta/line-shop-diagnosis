@@ -8,6 +8,7 @@ import {
   recordSurveyResponse, 
   completeUserJourney 
 } from '../../../lib/analytics-manager'
+import { processRealTimeResponse } from '../../../lib/realtime-analytics'
 
 // 🎯 完全版LINEアンケートツール - 設定を直接取得
 function getCurrentSurveyConfig() {
@@ -835,7 +836,7 @@ async function handleCompletePostback(event: PostbackEvent): Promise<Message | n
         // アナリティクス：回答記録
         if (session.sessionId) {
           const currentStepConfig = config[session.currentStep]
-          recordSurveyResponse({
+          const responseData = {
             userId: session.userId,
             userName: session.userName,
             step: session.currentStep,
@@ -844,6 +845,16 @@ async function handleCompletePostback(event: PostbackEvent): Promise<Message | n
             answerValue: value || '',
             nextStep: next,
             sessionId: session.sessionId
+          }
+          
+          // 通常のアナリティクス記録
+          recordSurveyResponse(responseData)
+          
+          // リアルタイムアナリティクス処理
+          processRealTimeResponse({
+            ...responseData,
+            timestamp: Date.now(),
+            previousStep: session.currentStep
           })
           
           // ジャーニー完了チェック

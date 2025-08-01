@@ -356,90 +356,146 @@ export default function Dashboard() {
 
         {/* Action Cards */}
         <motion.section 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
         >
-          <div className="card-ios p-8">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="p-3 bg-ios-blue/10 rounded-ios-md">
-                <Palette className="w-8 h-8 text-ios-blue" />
+          <div className="card-ios p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="p-2 bg-ios-blue/10 rounded-ios-md">
+                <Palette className="w-6 h-6 text-ios-blue" />
               </div>
               <div>
-                <h2 className="text-ios-title-3 font-semibold mb-2 text-gray-900 dark:text-white">
+                <h2 className="text-ios-subhead font-semibold mb-1 text-gray-900 dark:text-white">
                   🎨 フローデザイナー
                 </h2>
-                <p className="text-ios-subhead text-gray-600 dark:text-gray-400">
-                  React + Next.jsで構築されたビジュアルエディター
+                <p className="text-ios-caption-1 text-gray-600 dark:text-gray-400">
+                  ビジュアルエディター
                 </p>
               </div>
             </div>
             <Link href="/designer">
               <motion.button 
-                className="btn-primary w-full"
+                className="btn-primary w-full text-sm"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <div className="flex items-center justify-center gap-2">
-                  デザイナーを開く
-                  <ArrowRight className="w-4 h-4" />
+                  デザイナー
+                  <ArrowRight className="w-3 h-3" />
                 </div>
               </motion.button>
             </Link>
           </div>
 
-          <div className="card-ios p-8">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="p-3 bg-ios-green/10 rounded-ios-md">
-                <Zap className="w-8 h-8 text-ios-green" />
+          <div className="card-ios p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="p-2 bg-ios-green/10 rounded-ios-md">
+                <Zap className="w-6 h-6 text-ios-green" />
               </div>
               <div>
-                <h2 className="text-ios-title-3 font-semibold mb-2 text-gray-900 dark:text-white">
+                <h2 className="text-ios-subhead font-semibold mb-1 text-gray-900 dark:text-white">
                   ⚡ ライブエンジン
                 </h2>
-                <p className="text-ios-subhead text-gray-600 dark:text-gray-400">
-                  リアルタイム管理とモニタリング
+                <p className="text-ios-caption-1 text-gray-600 dark:text-gray-400">
+                  システム監視
                 </p>
               </div>
             </div>
             <Link href="/monitoring">
               <motion.button 
-                className="btn-success w-full"
+                className="btn-success w-full text-sm"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <div className="flex items-center justify-center gap-2">
-                  エンジン管理
-                  <Settings className="w-4 h-4" />
+                  監視画面
+                  <Settings className="w-3 h-3" />
                 </div>
               </motion.button>
             </Link>
           </div>
 
-          <div className="card-ios p-8">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="p-3 bg-ios-purple/10 rounded-ios-md">
-                <BarChart3 className="w-8 h-8 text-ios-purple" />
+          <div className="card-ios p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="p-2 bg-ios-purple/10 rounded-ios-md">
+                <BarChart3 className="w-6 h-6 text-ios-purple" />
               </div>
               <div>
-                <h2 className="text-ios-title-3 font-semibold mb-2 text-gray-900 dark:text-white">
-                  📊 高度なアナリティクス
+                <h2 className="text-ios-subhead font-semibold mb-1 text-gray-900 dark:text-white">
+                  📊 アナリティクス
                 </h2>
-                <p className="text-ios-subhead text-gray-600 dark:text-gray-400">
-                  アンケート回答結果の詳細分析
+                <p className="text-ios-caption-1 text-gray-600 dark:text-gray-400">
+                  詳細分析
                 </p>
               </div>
             </div>
             <Link href="/analytics">
               <motion.button 
-                className="btn-ios bg-ios-purple text-white hover:bg-ios-purple/90 w-full"
+                className="btn-ios bg-ios-purple text-white hover:bg-ios-purple/90 w-full text-sm"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <div className="flex items-center justify-center gap-2">
-                  分析を開く
-                  <Eye className="w-4 h-4" />
+                  分析画面
+                  <Eye className="w-3 h-3" />
+                </div>
+              </motion.button>
+            </Link>
+          </div>
+
+          <div className="card-ios p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="p-2 bg-ios-red/10 rounded-ios-md">
+                <Activity className="w-6 h-6 text-ios-red" />
+              </div>
+              <div>
+                <h2 className="text-ios-subhead font-semibold mb-1 text-gray-900 dark:text-white">
+                  🔴 リアルタイム
+                </h2>
+                <p className="text-ios-caption-1 text-gray-600 dark:text-gray-400">
+                  ライブ監視
+                </p>
+              </div>
+            </div>
+            <Link href="/realtime">
+              <motion.button 
+                className="btn-ios bg-ios-red text-white hover:bg-ios-red/90 w-full text-sm"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  ライブ画面
+                  <Activity className="w-3 h-3" />
+                </div>
+              </motion.button>
+            </Link>
+          </div>
+
+          <div className="card-ios p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="p-2 bg-ios-indigo/10 rounded-ios-md">
+                <Target className="w-6 h-6 text-ios-indigo" />
+              </div>
+              <div>
+                <h2 className="text-ios-subhead font-semibold mb-1 text-gray-900 dark:text-white">
+                  🎯 運用最適化
+                </h2>
+                <p className="text-ios-caption-1 text-gray-600 dark:text-gray-400">
+                  AI最適化
+                </p>
+              </div>
+            </div>
+            <Link href="/operations">
+              <motion.button 
+                className="btn-ios bg-ios-indigo text-white hover:bg-ios-indigo/90 w-full text-sm"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  最適化
+                  <Target className="w-3 h-3" />
                 </div>
               </motion.button>
             </Link>
